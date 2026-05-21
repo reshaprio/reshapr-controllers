@@ -1,0 +1,1068 @@
+---
+openapi: 3.0.2
+info:
+  title: reShapr Public API v0.1
+  version: 0.0.1
+  description: reShapr control plane REST API
+  contact:
+    name: Laurent Broudoux
+    url: https://github.com/lbroudoux
+    email: laurent.broudoux@gmail.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+paths:
+  /v1/artifacts:
+    post:
+      requestBody:
+        content:
+          multipart/form-data: {}
+          application/x-www-form-urlencoded: {}
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Artifact'
+          description: Artifact imported
+      security:
+      - jwt-bearer: []
+      operationId: importArtifact
+  /v1/configurationPlans:
+    get:
+      parameters:
+      - name: serviceId
+        description: Service unique identifier
+        schema:
+          type: string
+        in: query
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConfigurationPlan'
+          description: Get the list of ConfigurationPlan by service identifier
+      security:
+      - jwt-bearer: []
+      operationId: getConfigPlans
+    post:
+      requestBody:
+        description: The Configuration Plan to create
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigurationPlan'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationPlan'
+          description: Configuration Plan is created
+        "404":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: "One COnfiguration Plan dependency (service, secret, ...) cannot\
+            \ be found"
+      security:
+      - jwt-bearer: []
+      operationId: createConfigPlan
+  /v1/expositions:
+    get:
+      parameters:
+      - name: serviceId
+        description: Unique identifier of the Service to get Expositions for
+        schema:
+          type: string
+        in: query
+      - name: gatewayGroupId
+        description: 'Indeitfier of the Gateway Group to get Expositions for '
+        schema:
+          type: string
+        in: query
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Exposition'
+          description: Get the expositions - either all or filtered by Service or
+            Gateway Groupd
+      security:
+      - jwt-bearer: []
+      operationId: getExpositions
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpositionReference'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exposition'
+          description: Exposition successfully created
+        "404":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: One of exposition dependency (Configuration Plan or Gateway
+            Group) cannot be found
+      security:
+      - jwt-bearer: []
+      operationId: createExposition
+  /v1/gatewayGroups:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GatewayGroup'
+          description: The available GatewayGroups
+      security:
+      - jwt-bearer: []
+      operationId: listGatewayGroups
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GatewayGroup'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GatewayGroup'
+          description: The created GatewayGroup
+        "429":
+          description: Quotas of GatewayGroups exceeded
+      security:
+      - jwt-bearer: []
+      operationId: createGatewayGroup
+  /v1/quotas:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Quota'
+          description: Get the quotas of the user's organization
+      security:
+      - jwt-bearer: []
+      operationId: getQuotas
+  /v1/secrets:
+    get:
+      parameters:
+      - name: page
+        description: The number of the page to fetch (default is 0)
+        schema:
+          type: integer
+        in: query
+      - name: size
+        description: The number of secrets in a page to fetch (default is 20)
+        schema:
+          type: integer
+        in: query
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Secret'
+          description: Get the user's organization secrets
+      security:
+      - jwt-bearer: []
+      operationId: getSecrets
+    post:
+      requestBody:
+        description: The secret to create
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secret'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secret'
+          description: Secret is successfully created
+      security:
+      - jwt-bearer: []
+      operationId: createSecret
+  /v1/services:
+    get:
+      parameters:
+      - name: page
+        description: Number of page to fetch (default to 0)
+        schema:
+          type: number
+        in: query
+      - name: size
+        description: Size of the page to fetch (default to 20)
+        schema:
+          type: number
+        in: query
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Service'
+          description: The list of fetched Services
+      security:
+      - jwt-bearer: []
+      operationId: getServices
+  /v1/artifacts/service/{serviceId}:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Artifact'
+          description: Get the list of service artifacts
+      operationId: getArtifactsByServiceId
+    parameters:
+    - name: serviceId
+      description: Unique identifier of Service
+      schema:
+        type: string
+      in: path
+      required: true
+  /v1/artifacts/service/{serviceId}/refs: {}
+  /v1/artifacts/attach:
+    post:
+      requestBody:
+        content:
+          multipart/form-data: {}
+          application/x-www-form-urlencoded: {}
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Artifact'
+          description: Artifact attache
+      security:
+      - jwt-bearer: []
+      operationId: attachArtifact
+  /v1/services/{id}:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceView'
+          description: Get the ServiceView
+        "404":
+          description: Service with id is unknown
+      security:
+      - jwt-bearer: []
+      operationId: getServiceView
+    delete:
+      responses:
+        "204":
+          description: Service has been deleted
+        "404":
+          description: Service is unknown
+      security:
+      - jwt-bearer: []
+      operationId: deleteService
+    parameters:
+    - name: id
+      description: The Service unique identifier
+      schema:
+        type: string
+      in: path
+      required: true
+  /v1/configurationPlans/{id}:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationPlan'
+          description: The Configuration Plan matching requested id
+        "404":
+          description: Configuration Plan with this id is unknown
+      security:
+      - jwt-bearer: []
+      operationId: getConfigPlan
+    put:
+      requestBody:
+        description: The updated Configuration Plan
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigurationPlan'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationPlan'
+          description: Configuration Plan has been updated
+        "404":
+          description: Configuration Plan with id not found
+      security:
+      - jwt-bearer: []
+      operationId: updateConfigPlan
+    delete:
+      responses:
+        "204":
+          description: Successfully deleted
+        "404":
+          description: Configuration with id not found
+      security:
+      - jwt-bearer: []
+      operationId: deleteConfigPlan
+    parameters:
+    - name: id
+      description: Configuration Plan unique identifier
+      schema:
+        type: string
+      in: path
+      required: true
+  /v1/configurationPlans/{id}/renewApiKey:
+    put:
+      parameters:
+      - name: id
+        description: The Configuration Plan unique identifier
+        schema:
+          type: string
+        in: path
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationPlan'
+          description: The updated Configuration Plan
+      operationId: renewConfigPlanApiKey
+  /v1/expositions/active:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActiveExposition'
+          description: The list of active Expositions
+      security:
+      - jwt-bearer: []
+      operationId: getActiveExpositions
+  /v1/expositions/{id}:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exposition'
+          description: The Exposition with provided id
+        "404":
+          description: Exposition with this id is unknown
+      security:
+      - jwt-bearer: []
+      operationId: getExposition
+    delete:
+      responses:
+        "204":
+          description: Exposition deleted
+        "404":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: Exposition with this is is not found
+      security:
+      - jwt-bearer: []
+      operationId: deleteExposition
+    parameters:
+    - name: id
+      description: Exposition unique identifier
+      schema:
+        type: string
+      in: path
+      required: true
+  /v1/secrets/{id}:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secret'
+          description: The secret with matching identifier
+      operationId: getSecret
+    put:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secret'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secret'
+          description: The updated secret
+      security:
+      - jwt-bearer: []
+      operationId: updateSecret
+    delete:
+      responses:
+        "204":
+          description: Secret has been removed
+        "404":
+          description: Secret with this id is unknown
+      security:
+      - jwt-bearer: []
+      operationId: deleteSecret
+    parameters:
+    - name: id
+      description: The unique identifier of the Secret to manage
+      schema:
+        type: string
+      in: path
+      required: true
+  /v1/expositions/active/{id}:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActiveExposition'
+          description: The active exposition with provided id
+        "404":
+          description: Exposition with this id is unknown
+      security:
+      - jwt-bearer: []
+      operationId: getActiveExposition
+    parameters:
+    - name: id
+      description: The unique identifier of the active Exposition to manage
+      schema:
+        type: string
+      in: path
+      required: true
+  /v1/gatewayGroups/{id}:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GatewayGroup'
+          description: The GatewayGroupd with provided id
+      security:
+      - jwt-bearer: []
+      operationId: getGatewayGroup
+    put:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GatewayGroup'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GatewayGroup'
+          description: The updated GatewayGroup
+        "404":
+          description: GatewayGroup with id is unknown
+      security:
+      - jwt-bearer: []
+      operationId: updateGatewayGroup
+    delete:
+      responses:
+        "204":
+          description: GatewayGroup succesfully removed
+        "404":
+          description: GatewayGroup with is is unknwon
+      security:
+      - jwt-bearer: []
+      operationId: deleteGateGroup
+    parameters:
+    - name: id
+      description: The unique identifier of GatewayGroup to manage
+      schema:
+        type: string
+      in: path
+      required: true
+  /v1/artifacts/{id}:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Artifact'
+          description: The artifact with matching identifier
+        "404":
+          description: Artifact with this id is unknown
+      security:
+      - jwt-bearer: []
+      operationId: getArtifact
+    parameters:
+    - name: id
+      description: Unique identifier of the Artifact to manage
+      schema:
+        type: string
+      in: path
+      required: true
+  /v1/tokens/apiTokens:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApiToken'
+          description: The list of ApiTokens for this organization
+      security:
+      - jwt-bearer: []
+      operationId: getApiTokens
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiTokenRequest'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiToken'
+          description: The newmy created ApiToken
+      security:
+      - jwt-bearer: []
+      operationId: createApiToken
+  /v1/tokens/apiTokens/{id}:
+    delete:
+      responses:
+        "204":
+          description: ApiToekn has been sucessfully removed
+        "404":
+          description: ApiToken with this id is unknown
+      operationId: deleteApiToken
+    parameters:
+    - name: id
+      description: The unique identifier of ApiToken to manage
+      schema:
+        type: string
+      in: path
+      required: true
+components:
+  schemas:
+    Artifact:
+      description: An Artifact in Micepe control plane
+      required:
+      - id
+      - organizationId
+      - name
+      - content
+      - mainArtifact
+      - type
+      - sourceArtifact
+      type: object
+      properties:
+        id:
+          description: Artifact unique identifier
+          type: string
+        organizationId:
+          description: Identifier of the owning organization
+          type: string
+        name:
+          description: Artifact name
+          type: string
+        content:
+          description: Artifact content
+          type: string
+        path:
+          description: Relative path from root Artifact
+          type: string
+        mainArtifact:
+          description: Whether this artifact is a primary one
+          type: boolean
+        type:
+          $ref: '#/components/schemas/ArtifactType'
+          description: The type of this Artifact
+        sourceArtifact:
+          description: Name or URL of original artifact file
+          type: string
+    ArtifactType:
+      description: The supported type of Artifact
+      enum:
+      - JSON_SCHEMA
+      - OPEN_API_SPEC
+      - GRAPHQL_SCHEMA
+      - PROTOBUF_SCHEMA
+      - PROTOBUF_DESCRIPTOR
+      - JSON_FRAGMENT
+      - RESHAPR_PROMPTS
+      - RESHAPR_CUSTOM_TOOLS
+      - RESHAPR_RESOURCES
+      type: string
+    ArtifactReference:
+      description: Basic information about an Artifact in reShapr control plane
+      required:
+      - id
+      - organizationId
+      - name
+      - mainArtifact
+      - type
+      - sourceArtifact
+      type: object
+      properties:
+        id:
+          description: Artifact unique identifier
+          type: string
+        organizationId:
+          description: Identifier of the owning organization
+          type: string
+        name:
+          description: Artifact name
+          type: string
+        path:
+          description: Relative path from root Artifact
+          type: string
+        mainArtifact:
+          description: Whether this artifact is a primary one
+          type: boolean
+        type:
+          $ref: '#/components/schemas/ArtifactType'
+          description: The type of this Artifact
+        sourceArtifact:
+          description: Name or URL of original artifact file
+          type: string
+    ConfigurationPlanSummary:
+      description: The summary of a ConfigurationPlan in reShapr control plane
+      required:
+      - id
+      - backendEndpoint
+      type: object
+      properties:
+        id:
+          description: Unique identifier of the ConfigurationPlan
+          type: string
+        backendEndpoint:
+          description: The backend endpoint of this Configuration Plan
+          type: string
+    SecretReference:
+      description: A reference to a Secret of reShapr control plane
+      type: object
+    SecretType:
+      description: The types of Secret available in Micepe
+      enum:
+      - ARTIFACT
+      - ENDPOINT
+      type: string
+    ServiceView:
+      description: An aggregated view no Service and related elements in Micepe
+      type: object
+    ServiceSummary:
+      description: Basic information of a Service in reShapr control plance
+      type: object
+    ServiceType:
+      description: The available types of Service in reShapr
+      enum:
+      - REST
+      - GRAPHQL
+      - GRPC
+      type: string
+    ValidityPeriod:
+      description: 'The available duration that representation a validity period in
+        Micepe '
+      enum:
+      - "1"
+      - "7"
+      - "30"
+      - "90"
+      type: string
+    Exposition:
+      description: An Exposition in reShapr control plane
+      type: object
+    ExpositionReference:
+      description: A reference to an Exposition in reShapr control plane
+      type: object
+    Gateway:
+      description: A Gateway in Micepe control plane
+      type: object
+    Operation:
+      description: A Service Operation in Micepe control plane
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          description: Name of the operation
+          type: string
+        method:
+          description: HTTP or protocol specification method if it makes sense
+          type: string
+        action:
+          description: Denoted operation action (dependig on the protocol)
+          type: string
+        intputName:
+          description: Name of input message type
+          type: string
+        outputName:
+          description: Name of output message type
+          type: string
+    Service:
+      description: A Service in Micepe control plane
+      required:
+      - id
+      - organizationId
+      - name
+      - version
+      - createdOn
+      - type
+      type: object
+      properties:
+        id:
+          description: Service unique identifier
+          type: string
+        organizationId:
+          description: Identifier of the owning organization
+          type: string
+        name:
+          description: Service name
+          type: string
+        version:
+          description: Service name
+          type: string
+        type:
+          $ref: '#/components/schemas/ServiceType'
+          description: Service type
+        createdOn:
+          format: date-time
+          description: Creation date in control plance
+          type: string
+    ConfigurationPlan:
+      description: A ConfigurationPlan in Micepe control plane
+      required:
+      - id
+      - organizationId
+      - backendEndpoint
+      - name
+      - serviceId
+      type: object
+      properties:
+        id:
+          description: Unique identifier of the ConfigurationPlan
+          type: string
+        organizationId:
+          description: Identifier of the owning organization
+          type: string
+        backendEndpoint:
+          description: The backend endpoint of this Configuration Plan
+          type: string
+        name:
+          description: Name of the Configuration Plan
+          type: string
+        serviceId:
+          description: Identifier of the Service this Configuration Plan relates to
+          type: string
+        excludedOperations:
+          description: List of excluded operation names
+          type: array
+          items:
+            type: string
+        includedOperatoions:
+          description: List of included operation names
+          type: array
+          items:
+            type: string
+        backendSecretId:
+          description: Identifier of Backend Secret to use if any
+          type: string
+        apiKey:
+          description: The MCP endpoint API Key if configured
+          type: string
+        initialAccessToken:
+          description: Initial Access Token if using th einternal identity provider
+            for OAuth2 DCR
+          type: string
+        backendTimeout:
+          description: Timeout in milliseconds for requests to the backend endpoint
+          type: integer
+        audit:
+          description: Whether the audit log will be enabled and calls logged. Default is false.
+          type: boolean
+    ActiveExposition:
+      description: An Exposition that is currently active. ie. exposed by at least
+        one Gateway
+      required:
+      - service
+      - configurationPlan
+      - gateways
+      - id
+      - organizationId
+      type: object
+      properties:
+        service:
+          $ref: '#/components/schemas/ServiceView'
+          description: ""
+        configurationPlan:
+          $ref: '#/components/schemas/ConfigurationPlanSummary'
+          description: ""
+        gateways:
+          description: ""
+          type: array
+          items:
+            $ref: '#/components/schemas/GatewayView'
+        id:
+          description: Unique identifier of the Exposition
+          type: string
+        organizationId:
+          description: Unique identifier of the organization of the Exposition
+          type: string
+    ConfigurationPlanView:
+      description: Minimal representation of a COnfiguration Plan
+      required:
+      - id
+      - backendEndpoint
+      type: object
+      properties:
+        id:
+          description: ""
+          type: string
+        backendEndpoint:
+          description: ""
+          type: string
+    GatewayView:
+      description: Minimalist representation of a Gateway
+      required:
+      - id
+      - name
+      - fqdns
+      type: object
+      properties:
+        id:
+          description: The unique identifier of this gateway
+          type: string
+        name:
+          description: The unique name of this gateway
+          type: string
+        fqdns:
+          description: The list of Fully Qualified Domain Names of this gateway
+          type: array
+          items:
+            type: string
+    Quota:
+      description: A Quota in control plance
+      required:
+      - id
+      - organizationId
+      - metric
+      - enabled
+      - limit
+      - remaining
+      type: object
+      properties:
+        id:
+          description: Unique identifier of the quota
+          type: string
+        organizationId:
+          description: Identifier of the organization owning this quota
+          type: string
+        metric:
+          description: The metric subject to quota
+          type: string
+        enabled:
+          description: Whether quota is enabled for this metric
+          type: boolean
+        limit:
+          format: int64
+          description: The maximum number of instance of this metric that is allowed
+          type: integer
+        remaining:
+          format: int64
+          description: The remanining intance of metric within this quota
+          type: integer
+    Secret:
+      description: A Secret in the control plane
+      required:
+      - organizationId
+      - name
+      - type
+      type: object
+      properties:
+        id:
+          description: Unique identifier of this secret
+        organizationId:
+          description: Unique identifier or the owning organization
+          type: string
+        name:
+          description: The name of this secret
+          type: string
+        description:
+          description: A longer description of this secret
+          type: string
+        type:
+          $ref: '#/components/schemas/SecretType'
+          description: The type of this secret
+        username:
+          description: Username for this secret
+          type: string
+        password:
+          description: Password for this secret
+          type: string
+        token:
+          description: THe token to use for this secret
+          type: string
+        tokenHeader:
+          description: The header to use to transfer the token
+          type: string
+        certPem:
+          description: A X509 certification in PEM format for this secret
+          type: string
+        useElicitation:
+          description: Whether this is an elicitation based secret
+          type: string
+        oauth2ClientConfiguration:
+          $ref: '#/components/schemas/OAuth2ClientConfiguration'
+          description: 'Third-party OAuth2 client configuration for elicitation '
+    OAuth2ClientConfiguration:
+      description: The configuration of an OAuth2 client
+      required:
+      - clientId
+      - authorizationEndpoint
+      - tokenEndpoint
+      type: object
+      properties:
+        clientId:
+          description: The OAuth2 client identifier
+          type: string
+        authorizationEndpoint:
+          description: The authorization endpoint of OAuth2 auth server
+          type: string
+        tokenEndpoint:
+          description: The token exchange endpoint of the OAuth2 authorization server
+          type: string
+        clientSecret:
+          description: The OAuth2 client secret if needed
+          type: string
+    GatewayGroup:
+      description: A GatewayGroup in Reshapr control plane
+      required:
+      - id
+      - organizationId
+      - name
+      type: object
+      properties:
+        id:
+          description: The unique identifier of this GatewayGroup
+          type: string
+        organizationId:
+          description: The unique identifier of the organization this group is attahced
+            to
+          type: string
+        name:
+          description: The unique name of this GatewayGroup
+          type: string
+        labels:
+          description: The labels attached to this gateway group (key=value pairs)
+          type: object
+          additionalProperties: true
+    ApiToken:
+      description: An API token for the Reshapr control plane
+      required:
+      - id
+      - organizationId
+      - name
+      - username
+      - validUntil
+      type: object
+      properties:
+        id:
+          description: The unique identifier of this ApiToken
+          type: string
+        organizationId:
+          description: Identifier of the owning organization
+          type: string
+        name:
+          description: Unique name of the token within organization
+          type: string
+        token:
+          description: The token unique value itself
+          type: string
+        username:
+          description: The name of user that actually created the ApiToken
+          type: string
+        validUntil:
+          format: date-time
+          description: Validaty date for this token
+          type: string
+    ApiTokenRequest:
+      description: ""
+      required:
+      - name
+      - validityDays
+      type: object
+      properties:
+        name:
+          description: The name for the new ApiToken to create
+          type: string
+        validityDays:
+          description: THe number of days this token will be valid from today
+          enum:
+          - "1"
+          - "7"
+          - "30"
+          - "90"
+          type: string
+  securitySchemes:
+    jwt-bearer:
+      scheme: bearer
+      type: http
+      description: JWT Bearer acquired from reShapr Authentication API /auth endpoint
