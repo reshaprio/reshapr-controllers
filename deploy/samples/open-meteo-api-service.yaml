@@ -1,0 +1,9 @@
+apiVersion: reshapr.io/v1alpha1
+kind: Service
+metadata:
+  name: open-meteo-api
+  annotations:
+    reshapr.io/instance: reshapr-control-plane-ctrl.reshapr-system
+    reshapr.io/organization: reshapr
+spec:
+  url: https://raw.githubusercontent.com/open-meteo/open-meteo/refs/heads/main/openapi.yml

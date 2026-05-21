@@ -1,0 +1,255 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reshapr.io/schemas/Resources-v1alpha1-schema.json",
+  "title": "The Resources JSON schema",
+  "description": "Resources is a specification for defining MCP resources.",
+  "required": [
+    "apiVersion",
+    "kind",
+    "service"
+  ],
+  "anyOf": [
+    {
+      "required": ["resources"]
+    },
+    {
+      "required": ["resourceTemplates"]
+    }
+  ],
+  "properties": {
+    "apiVersion": {
+      "$id": "#/properties/apiVersion",
+      "type": "string",
+      "title": "The apiVersion of Resources",
+      "description": "The version of Resources description.",
+      "const": "reshapr.io/v1alpha1"
+    },
+    "kind": {
+      "$id": "#/properties/kind",
+      "type": "string",
+      "title": "The Resources kind schema",
+      "description": "Kind marker for Resources",
+      "const": "Resources"
+    },
+    "service": {
+      "$id": "#/properties/service",
+      "type": "object",
+      "title": "The target Service for Resources",
+      "description": "Holds reference information about this Service resources relate.",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "$id": "#/properties/service/properties/name",
+          "type": "string",
+          "title": "The name of Service these resources relate to.",
+          "description": "Human readable name of the target Service for resources."
+        },
+        "version": {
+          "$id": "#/properties/service/properties/version",
+          "type": "string",
+          "title": "The version of API these resources relate to.",
+          "description": "Human readable version of the target Service for resources."
+        }
+      }
+    },
+    "resources": {
+      "$id": "#/properties/resources",
+      "type": "object",
+      "title": "The Service resources.",
+      "description": "The resources are defined with uri as key.",
+      "patternProperties": {
+        "^.": {
+          "$ref": "#/definitions/resourceItem"
+        }
+      }
+    },
+    "resourceTemplates": {
+      "$id": "#/properties/resourceTemplates",
+      "type": "object",
+      "title": "The Service resource templates.",
+      "description": "The resource templates are defined with uri as key.",
+      "patternProperties": {
+        "^.": {
+          "$ref": "#/definitions/resourceTemplateItem"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "resourceItem": {
+      "$id": "#/definitions/resourceItem",
+      "type": "object",
+      "title": "One resource definition",
+      "description": "One resource definition",
+      "required": [
+        "name"
+      ],
+      "oneOf": [
+        {
+          "required": ["text"],
+          "not": {
+            "required": ["blob", "remoteContent"]
+          }
+        },
+        {
+          "required": ["blob"],
+          "not": {
+            "required": ["text", "remoteContent"]
+          }
+        },
+        {
+          "required": ["remoteContent"],
+          "not": {
+            "required": ["text", "blob"]
+          }
+        },
+        {
+          "not": {
+            "anyOf": [
+              {"required": ["text"]},
+              {"required": ["blob"]},
+              {"required": ["remoteContent"]}
+            ]
+          }
+        }
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "The name of this resource."
+        },
+        "title": {
+          "type": "string",
+          "title": "Human readable title of this resource."
+        },
+        "description": {
+          "type": "string",
+          "title": "Human readable long description of this resource."
+        },
+        "mimeType": {
+          "type": "string",
+          "title": "The MIME type of this resource."
+        },
+        "icons": {
+          "type": "array",
+          "title": "Optional icons for this resource.",
+          "items": {
+            "$ref": "#/definitions/iconItem"
+          }
+        },
+        "size": {
+          "type": "integer",
+          "title": "The size of this resource in bytes."
+        },
+        "annotations": {
+          "$ref": "#/definitions/annotations"
+        },
+        "text": {
+          "type": "string",
+          "title": "The text content of this resource, if applicable."
+        },
+        "blob": {
+          "type": "string",
+          "title": "The base64 encoded binary content of this resource, if applicable."
+        },
+        "remoteContent": {
+          "type": "string",
+          "title": "The remote URI where this resource content can be found, if applicable."
+        }
+      }
+    },
+    "resourceTemplateItem": {
+      "$id": "#/definitions/resourceTemplateItem",
+      "type": "object",
+      "title": "One resource template definition",
+      "description": "One resource template definition",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "The name of this resource template."
+        },
+        "title": {
+          "type": "string",
+          "title": "Human readable title of this resource template."
+        },
+        "description": {
+          "type": "string",
+          "title": "Human readable long description of this resource template."
+        },
+        "mimeType": {
+          "type": "string",
+          "title": "The MIME type of these resources template."
+        },
+        "icons": {
+          "type": "array",
+          "title": "Optional icons for this resource template.",
+          "items": {
+            "$ref": "#/definitions/iconItem"
+          }
+        },
+        "annotations": {
+          "$ref": "#/definitions/annotations"
+        }
+      }
+    },
+    "iconItem": {
+      "$id": "#/definitions/iconItem",
+      "type": "object",
+      "title": "One resource icon definition.",
+      "description": "One resource icon definition.",
+      "required": [
+        "src"
+      ],
+      "properties": {
+        "src": {
+          "type": "string",
+          "title": "The source of this icon."
+        },
+        "mimeType": {
+          "type": "string",
+          "title": "The MIME type of this resource."
+        },
+        "sizes": {
+          "type": "array",
+          "title": "Array of icon sizes.",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "annotations": {
+      "$id": "#/definitions/annotations",
+      "type": "object",
+      "title": "One resource annotation definition.",
+      "description": "One resource annotation definition.",
+      "properties": {
+        "audience": {
+          "type": "array",
+          "title": "The intended audiences for this resource.",
+          "items": {
+              "type": "string"
+          }
+        },
+        "priority": {
+          "type": "number",
+          "format": "float",
+          "title": "The importance of this resource.",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "lastModified": {
+          "type": "string",
+          "format": "date-time",
+          "title": "The last modified date of this resource."
+        }
+      }
+    }
+  }
+}

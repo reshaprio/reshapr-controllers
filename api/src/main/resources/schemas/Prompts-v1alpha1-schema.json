@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reshapr.io/schemas/Prompts-v1alpha1-schema.json",
+  "title": "The Prompts JSON schema",
+  "description": "Prompts is a specification for defining MCP prompts.",
+  "required": [
+    "apiVersion",
+    "kind",
+    "service",
+    "prompts"
+  ],
+  "properties": {
+    "apiVersion": {
+      "$id": "#/properties/apiVersion",
+      "type": "string",
+      "title": "The apiVersion of Prompts",
+      "description": "The version of Prompts description.",
+      "const": "reshapr.io/v1alpha1"
+    },
+    "kind": {
+      "$id": "#/properties/kind",
+      "type": "string",
+      "title": "The Prompts kind schema",
+      "description": "Kind marker for Prompts",
+      "const": "Prompts"
+    },
+    "service": {
+      "$id": "#/properties/service",
+      "type": "object",
+      "title": "The target Service for Prompts",
+      "description": "Holds reference information about this Service prompts relate.",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "$id": "#/properties/service/properties/name",
+          "type": "string",
+          "title": "The name of Service these prompts relate to.",
+          "description": "Human readable name of the target Service for prompts."
+        },
+        "version": {
+          "$id": "#/properties/service/properties/version",
+          "type": "string",
+          "title": "The version of API these prompts relate to.",
+          "description": "Human readable version of the target Service for prompts."
+        }
+      }
+    },
+    "prompts": {
+      "$id": "#/properties/prompts",
+      "type": "object",
+      "title": "The Service prompts.",
+      "description": "The prompts are defined with name as key.",
+      "patternProperties": {
+        "^.": {
+          "$ref": "#/definitions/promptItem"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "promptItem": {
+      "$id": "#/definitions/promptItem",
+      "type": "object",
+      "title": "One prompt definition",
+      "description": "One prompt definition",
+      "required": [
+        "result"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "title": "Human readable title of this prompt."
+        },
+        "description": {
+          "type": "string",
+          "title": "Human readable long description of this prompt."
+        },
+        "arguments": {
+          "type": "array",
+          "title": "Optional arguments for this prompt template.",
+          "items": {
+            "$ref": "#/definitions/argumentItem"
+          }
+        },
+        "result": {
+          "type": "string",
+          "title": "This prompt result. Maybe a template reusing ${argument} notation."
+        }
+      }
+    },
+    "argumentItem": {
+      "$id": "#/definitions/argumentItem",
+      "type": "object",
+      "title": "One prompt argument definition.",
+      "description": "One prompt argument definition.",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "The name of this prompt argument."
+        },
+        "title": {
+          "type": "string",
+          "title": "Human readable title of this prompt argument."
+        },
+        "description": {
+          "type": "string",
+          "title": "Human readable long description of this prompt argument."
+        },
+        "required": {
+          "type": "boolean",
+          "title": "Whether the argument is required or not.",
+          "default": false
+        }
+      }
+    }
+  }
+}

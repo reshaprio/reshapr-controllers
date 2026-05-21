@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reshapr.io/schemas/ToolsOutputFilters-v1alpha1-schema.json",
+  "title": "The ToolsOutputFilters JSON schema",
+  "description": "ToolsOutputFilters is a specification for defining output filters on MCP tools responses to slim down payloads before they reach LLMs.",
+  "required": [
+    "apiVersion",
+    "kind",
+    "service",
+    "filters"
+  ],
+  "properties": {
+    "apiVersion": {
+      "$id": "#/properties/apiVersion",
+      "type": "string",
+      "title": "The apiVersion of ToolsOutputFilters",
+      "description": "The version of ToolsOutputFilters description.",
+      "const": "reshapr.io/v1alpha1"
+    },
+    "kind": {
+      "$id": "#/properties/kind",
+      "type": "string",
+      "title": "The ToolsOutputFilters kind schema",
+      "description": "Kind marker for ToolsOutputFilters",
+      "const": "ToolsOutputFilters"
+    },
+    "service": {
+      "$id": "#/properties/service",
+      "type": "object",
+      "title": "The target Service for ToolsOutputFilters",
+      "description": "Holds reference information about this Service output filters relate.",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "$id": "#/properties/service/properties/name",
+          "type": "string",
+          "title": "The name of Service these output filters relate to.",
+          "description": "Human readable name of the target Service for output filters."
+        },
+        "version": {
+          "$id": "#/properties/service/properties/version",
+          "type": "string",
+          "title": "The version of API these output filters relate to.",
+          "description": "Human readable version of the target Service for output filters."
+        }
+      }
+    },
+    "filters": {
+      "$id": "#/properties/filters",
+      "type": "object",
+      "title": "The Service tools output filters.",
+      "description": "The output filters are defined with tool name as key.",
+      "patternProperties": {
+        "^.": {
+          "$ref": "#/definitions/filterItem"
+        }
+      },
+      "minProperties": 1
+    }
+  },
+  "definitions": {
+    "filterItem": {
+      "$id": "#/definitions/filterItem",
+      "type": "object",
+      "title": "One output filter definition",
+      "description": "One output filter definition targeting a specific tool.",
+      "anyOf": [
+        {
+          "required": ["jsonRetain"]
+        },
+        {
+          "required": ["jsonPatches"]
+        },
+        {
+          "required": ["convertToToon"]
+        }
+      ],
+      "properties": {
+        "jsonRetain": {
+          "type": "array",
+          "title": "JSON Pointer paths to retain in the output. Only these branches are kept, everything else is removed.",
+          "items": {
+            "type": "string",
+            "pattern": "^/"
+          },
+          "minItems": 1
+        },
+        "jsonPatches": {
+          "type": "array",
+          "title": "JSON Patch operations (RFC 6902) to apply on the output.",
+          "items": {
+            "$ref": "#/definitions/patchOperation"
+          },
+          "minItems": 1
+        },
+        "convertToToon": {
+          "type": "boolean",
+          "title": "Whether to convert the final JSON output to Toon format for a more compact LLM-friendly representation.",
+          "const": true
+        }
+      }
+    },
+    "patchOperation": {
+      "$id": "#/definitions/patchOperation",
+      "type": "object",
+      "title": "A JSON Patch operation as per RFC 6902.",
+      "required": [
+        "op",
+        "path"
+      ],
+      "properties": {
+        "op": {
+          "type": "string",
+          "enum": ["add", "remove", "replace", "move", "copy", "test"]
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "value": {},
+        "from": {
+          "type": "string",
+          "pattern": "^/"
+        }
+      }
+    }
+  }
+}

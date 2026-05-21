@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reshapr.io/schemas/CustomTools-v1alpha1-schema.json",
+  "title": "The CustomTools JSON schema",
+  "description": "CustomTools is a specification for defining MCP custom tools.",
+  "required": [
+    "apiVersion",
+    "kind",
+    "service",
+    "customTools"
+  ],
+  "properties": {
+    "apiVersion": {
+      "$id": "#/properties/apiVersion",
+      "type": "string",
+      "title": "The apiVersion of CustomTools",
+      "description": "The version of CustomTools description.",
+      "const": "reshapr.io/v1alpha1"
+    },
+    "kind": {
+      "$id": "#/properties/kind",
+      "type": "string",
+      "title": "The CustomTools kind schema",
+      "description": "Kind marker for CustomTools",
+      "const": "CustomTools"
+    },
+    "service": {
+      "$id": "#/properties/service",
+      "type": "object",
+      "title": "The target Service for CustomTools",
+      "description": "Holds reference information about this Service custom tools relate.",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "$id": "#/properties/service/properties/name",
+          "type": "string",
+          "title": "The name of Service these custom tools relate to.",
+          "description": "Human readable name of the target Service for custom tools."
+        },
+        "version": {
+          "$id": "#/properties/service/properties/version",
+          "type": "string",
+          "title": "The version of API these custom tools relate to.",
+          "description": "Human readable version of the target Service for custom tools."
+        }
+      }
+    },
+    "customTools": {
+      "$id": "#/properties/customTools",
+      "type": "object",
+      "title": "The Service custom tools.",
+      "description": "The custom tools are defined with name as key.",
+      "patternProperties": {
+        "^.": {
+          "$ref": "#/definitions/customToolItem"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "customToolItem": {
+      "$id": "#/definitions/customToolItem",
+      "type": "object",
+      "title": "One custom tool definition",
+      "description": "One custom tool definition",
+      "required": [
+        "tool",
+        "description",
+        "input"
+      ],
+      "properties": {
+        "tool": {
+          "type": "string",
+          "title": "The name of the target tool, e.g., 'user', 'createIssue', etc."
+        },
+        "description": {
+          "type": "string",
+          "title": "Human readable long description of this custom tool."
+        },
+        "input": {
+          "type": "object",
+          "description": "A JSON Schema object defining the expected parameters for the tool.",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "properties": {
+              "additionalProperties": {
+                "additionalProperties": true,
+                "properties": {},
+                "type": "object"
+              },
+              "type": "object"
+            },
+            "required": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "object",
+              "type": "string"
+            }
+          }
+        },
+        "arguments": {
+          "type": "object",
+          "title": "The target tool arguments result. Actually a template reusing ${input} notation."
+        }
+      }
+    }
+  }
+}
