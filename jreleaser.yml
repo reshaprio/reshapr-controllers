@@ -1,0 +1,61 @@
+project:
+  name: Reshapr
+  description: Reshapr core project
+  copyright: The Reshapr Authors
+  java:
+    version: '25'
+
+signing:
+  active: ALWAYS
+  armored: true
+
+assemble:
+  archive:
+    reshapr:
+      active: ALWAYS
+      stereotype: NONE
+      options:
+        longFileMode: POSIX
+      formats:
+        - ZIP
+        - TGZ
+      fileSets:
+        - input: target/staging-deploy
+          includes:
+            - '**/*.*'
+
+files:
+  active: ALWAYS
+  artifacts:
+    - path: 'target/site/reshapr-controllers-{{projectVersion}}.spdx-sbom.json'
+    - path: 'admission/target/site/reshapr-kube-admission-{{projectVersion}}.spdx-sbom.json'
+    - path: 'api/target/site/reshapr-kube-api-{{projectVersion}}.spdx-sbom.json'
+    - path: 'operator/target/site/reshapr-kube-operator-{{projectVersion}}.spdx-sbom.json'
+
+deploy:
+  maven:
+    mavenCentral:
+      sonatype:
+        active: ALWAYS
+        snapshotSupported: false
+        url: https://central.sonatype.com/api/v1/publisher
+        username: wPlqdV4c
+        namespace: io.reshapr
+        applyMavenCentralRules: true
+        stagingRepositories:
+          - target/staging-deploy
+    pomchecker:
+      failOnWarning: false
+      failOnError: false
+      strict: false
+
+release:
+  github:
+    overwrite: true
+    releaseName: '{{tagName}}'
+    tagName: '{{projectVersion}}'
+    changelog:
+      formatted: ALWAYS
+      preset: conventional-commits
+      contributors:
+        format: '- {{contributorName}}{{#contributorUsernameAsLink}} ({{.}}){{/contributorUsernameAsLink}}'
