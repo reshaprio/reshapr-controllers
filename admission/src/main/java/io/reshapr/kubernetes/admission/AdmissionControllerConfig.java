@@ -16,7 +16,9 @@
 package io.reshapr.kubernetes.admission;
 
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.webhook.admission.AdmissionController;
+import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 
@@ -27,9 +29,12 @@ public class AdmissionControllerConfig {
 
    public static final String MUTATING_CONTROLLER = "mutatingController";
 
+   @Inject
+   KubernetesClient client;
+
    @Singleton
    @Named(MUTATING_CONTROLLER)
    public AdmissionController<Pod> mutatingController() {
-      return AdmissionControllers.mutatingController();
+      return AdmissionControllers.mutatingController(client);
    }
 }

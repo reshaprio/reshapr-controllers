@@ -18,6 +18,7 @@ package io.reshapr.kubernetes.admission;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.webhook.admission.AdmissionController;
 import io.javaoperatorsdk.webhook.admission.NotAllowedException;
 import io.javaoperatorsdk.webhook.admission.Operation;
@@ -45,14 +46,20 @@ public class AdmissionControllers {
       // Private constructor to prevent instantiation.
    }
 
-   public static AdmissionController<Pod> mutatingController() {
-      return new AdmissionController<>(new PodMutator());
+   public static AdmissionController<Pod> mutatingController(KubernetesClient client) {
+      return new AdmissionController<>(new PodMutator(client));
    }
 
    /**
     * Mutates Pods to inject the Reshapr Proxy container if annotated.
     */
    public static class PodMutator implements Mutator<Pod> {
+
+      private final KubernetesClient client;
+
+      public PodMutator(KubernetesClient client) {
+          this.client = client;
+      }
 
       @Override
       public Pod mutate(Pod resource, Operation operation) throws NotAllowedException {
@@ -64,12 +71,32 @@ public class AdmissionControllers {
                return resource;
             }
 
+            // Fetch defaults from ConfigMap
+            String namespace = resource.getMetadata().getNamespace();
+            if (namespace == null) {
+                // If namespace is not set on the resource, it defaults to "default" in Kubernetes
+                namespace = "default";
+            }
+            
+            Map<String, String> configMapData = new HashMap<>();
+            try {
+                var configMap = client.configMaps().inNamespace(namespace).withName("reshapr-injection-config").get();
+                if (configMap != null && configMap.getData() != null) {
+                    configMapData = configMap.getData();
+                }
+            } catch (Exception e) {
+                // Ignore if ConfigMap doesn't exist or client fails
+            }
+
             ContainerBuilder proxyBuilder = new ContainerBuilder()
                   .withName(PROXY_CONTAINER_NAME)
                   .withImage(DEFAULT_PROXY_IMAGE);
                   
-            // Inject control plane URL env
-            String controlPlaneUrl = annotations.get(CONTROL_PLANE_URL_ANNOTATION);
+            // 1. Inject control plane URL
+            String controlPlaneUrl = annotations.containsKey(CONTROL_PLANE_URL_ANNOTATION) 
+                ? annotations.get(CONTROL_PLANE_URL_ANNOTATION) 
+                : configMapData.get("control-plane-url");
+                
             if (controlPlaneUrl != null && !controlPlaneUrl.isBlank()) {
                proxyBuilder.addNewEnv()
                      .withName("RESHAPR_CONTROL_PLANE_URL")
@@ -77,14 +104,29 @@ public class AdmissionControllers {
                      .endEnv();
             }
 
-            // Inject secret as envFrom
-            String secretName = annotations.get(TOKEN_SECRET_NAME_ANNOTATION);
+            // 2. Inject secret as envFrom
+            String secretName = annotations.containsKey(TOKEN_SECRET_NAME_ANNOTATION) 
+                ? annotations.get(TOKEN_SECRET_NAME_ANNOTATION) 
+                : configMapData.get("token-secret-name");
+                
             if (secretName != null && !secretName.isBlank()) {
                proxyBuilder.addNewEnvFrom()
                      .withNewSecretRef()
                         .withName(secretName)
                      .endSecretRef()
                      .endEnvFrom();
+            }
+            
+            // 3. Inject Gateway Labels
+            String gatewayLabels = annotations.containsKey("io.reshapr/gateway-labels") 
+                ? annotations.get("io.reshapr/gateway-labels") 
+                : configMapData.get("gateway-labels");
+                
+            if (gatewayLabels != null && !gatewayLabels.isBlank()) {
+               proxyBuilder.addNewEnv()
+                     .withName("RESHAPR_GATEWAY_LABELS")
+                     .withValue(gatewayLabels)
+                     .endEnv();
             }
 
             // Add the container to the Pod
