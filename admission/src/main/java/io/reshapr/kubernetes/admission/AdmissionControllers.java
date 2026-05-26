@@ -90,7 +90,11 @@ public class AdmissionControllers {
 
             ContainerBuilder proxyBuilder = new ContainerBuilder()
                   .withName(PROXY_CONTAINER_NAME)
-                  .withImage(DEFAULT_PROXY_IMAGE);
+                  .withImage(DEFAULT_PROXY_IMAGE)
+                  .addNewPort()
+                     .withContainerPort(8080)
+                     .withName("proxy")
+                  .endPort();
                   
             // 1. Inject control plane URL
             String controlPlaneUrl = annotations.containsKey(CONTROL_PLANE_URL_ANNOTATION) 
@@ -126,6 +130,18 @@ public class AdmissionControllers {
                proxyBuilder.addNewEnv()
                      .withName("RESHAPR_GATEWAY_LABELS")
                      .withValue(gatewayLabels)
+                     .endEnv();
+            }
+
+            // 4. Inject Gateway Instance (Control Plane Binding)
+            String gatewayInstance = annotations.containsKey("io.reshapr/instance") 
+                ? annotations.get("io.reshapr/instance") 
+                : configMapData.get("instance");
+                
+            if (gatewayInstance != null && !gatewayInstance.isBlank()) {
+               proxyBuilder.addNewEnv()
+                     .withName("RESHAPR_GATEWAY_INSTANCE")
+                     .withValue(gatewayInstance)
                      .endEnv();
             }
 
