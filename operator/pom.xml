@@ -18,7 +18,7 @@
 
     <jackson-databind-nullable.version>0.2.10</jackson-databind-nullable.version>
     <java-operator-sdk.version>5.3.3</java-operator-sdk.version>
-    <quarkus.operator-sdk.version>7.7.4</quarkus.operator-sdk.version>
+    <quarkus.operator-sdk.version>7.7.5</quarkus.operator-sdk.version>
     <openapi-generator.version>7.22.0</openapi-generator.version>
   </properties>
 
