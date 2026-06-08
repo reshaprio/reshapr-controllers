@@ -29,6 +29,64 @@ paths:
       security:
       - jwt-bearer: []
       operationId: importArtifact
+  /v1/artifacts/attach:
+    post:
+      requestBody:
+        content:
+          multipart/form-data: { }
+          application/x-www-form-urlencoded: { }
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Artifact'
+          description: Artifact attache
+      security:
+        - jwt-bearer: [ ]
+      operationId: attachArtifact
+  /v1/artifacts/{id}:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Artifact'
+          description: The artifact with matching identifier
+        "404":
+          description: Artifact with this id is unknown
+      security:
+        - jwt-bearer: [ ]
+      operationId: getArtifact
+    parameters:
+      - name: id
+        description: Unique identifier of the Artifact to manage
+        schema:
+          type: string
+        in: path
+        required: true
+  /v1/artifacts/service/{serviceId}:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Artifact'
+          description: Get the list of service artifacts
+      operationId: getArtifactsByServiceId
+    parameters:
+      - name: serviceId
+        description: Unique identifier of Service
+        schema:
+          type: string
+        in: path
+        required: true
+  /v1/artifacts/service/{serviceId}/refs: { }
   /v1/configurationPlans:
     get:
       parameters:
@@ -75,6 +133,73 @@ paths:
       security:
       - jwt-bearer: []
       operationId: createConfigPlan
+  /v1/configurationPlans/{id}:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationPlan'
+          description: The Configuration Plan matching requested id
+        "404":
+          description: Configuration Plan with this id is unknown
+      security:
+        - jwt-bearer: [ ]
+      operationId: getConfigPlan
+    put:
+      requestBody:
+        description: The updated Configuration Plan
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigurationPlan'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationPlan'
+          description: Configuration Plan has been updated
+        "404":
+          description: Configuration Plan with id not found
+      security:
+        - jwt-bearer: [ ]
+      operationId: updateConfigPlan
+    delete:
+      responses:
+        "204":
+          description: Successfully deleted
+        "404":
+          description: Configuration with id not found
+      security:
+        - jwt-bearer: [ ]
+      operationId: deleteConfigPlan
+    parameters:
+      - name: id
+        description: Configuration Plan unique identifier
+        schema:
+          type: string
+        in: path
+        required: true
+  /v1/configurationPlans/{id}/renewApiKey:
+    put:
+      parameters:
+        - name: id
+          description: The Configuration Plan unique identifier
+          schema:
+            type: string
+          in: path
+          required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationPlan'
+          description: The updated Configuration Plan
+      operationId: renewConfigPlanApiKey
   /v1/expositions:
     get:
       parameters:
@@ -125,6 +250,75 @@ paths:
       security:
       - jwt-bearer: []
       operationId: createExposition
+  /v1/expositions/{id}:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exposition'
+          description: The Exposition with provided id
+        "404":
+          description: Exposition with this id is unknown
+      security:
+        - jwt-bearer: [ ]
+      operationId: getExposition
+    delete:
+      responses:
+        "204":
+          description: Exposition deleted
+        "404":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: Exposition with this is is not found
+      security:
+        - jwt-bearer: [ ]
+      operationId: deleteExposition
+    parameters:
+      - name: id
+        description: Exposition unique identifier
+        schema:
+          type: string
+        in: path
+        required: true
+  /v1/expositions/active:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActiveExposition'
+          description: The list of active Expositions
+      security:
+        - jwt-bearer: []
+      operationId: getActiveExpositions
+  /v1/expositions/active/{id}:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActiveExposition'
+          description: The active exposition with provided id
+        "404":
+          description: Exposition with this id is unknown
+      security:
+        - jwt-bearer: [ ]
+      operationId: getActiveExposition
+    parameters:
+      - name: id
+        description: The unique identifier of the active Exposition to manage
+        schema:
+          type: string
+        in: path
+        required: true
   /v1/gatewayGroups:
     get:
       responses:
@@ -158,6 +352,53 @@ paths:
       security:
       - jwt-bearer: []
       operationId: createGatewayGroup
+  /v1/gatewayGroups/{id}:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GatewayGroup'
+          description: The GatewayGroupd with provided id
+      security:
+        - jwt-bearer: [ ]
+      operationId: getGatewayGroup
+    put:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GatewayGroup'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GatewayGroup'
+          description: The updated GatewayGroup
+        "404":
+          description: GatewayGroup with id is unknown
+      security:
+        - jwt-bearer: [ ]
+      operationId: updateGatewayGroup
+    delete:
+      responses:
+        "204":
+          description: GatewayGroup succesfully removed
+        "404":
+          description: GatewayGroup with is is unknwon
+      security:
+        - jwt-bearer: [ ]
+      operationId: deleteGateGroup
+    parameters:
+      - name: id
+        description: The unique identifier of GatewayGroup to manage
+        schema:
+          type: string
+        in: path
+        required: true
   /v1/quotas:
     get:
       responses:
@@ -212,6 +453,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Secret'
           description: Secret is successfully created
+        "409":
+          description: Secret with this name already exists in the organization
       security:
       - jwt-bearer: []
       operationId: createSecret
@@ -240,43 +483,6 @@ paths:
       security:
       - jwt-bearer: []
       operationId: getServices
-  /v1/artifacts/service/{serviceId}:
-    get:
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Artifact'
-          description: Get the list of service artifacts
-      operationId: getArtifactsByServiceId
-    parameters:
-    - name: serviceId
-      description: Unique identifier of Service
-      schema:
-        type: string
-      in: path
-      required: true
-  /v1/artifacts/service/{serviceId}/refs: {}
-  /v1/artifacts/attach:
-    post:
-      requestBody:
-        content:
-          multipart/form-data: {}
-          application/x-www-form-urlencoded: {}
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Artifact'
-          description: Artifact attache
-      security:
-      - jwt-bearer: []
-      operationId: attachArtifact
   /v1/services/{id}:
     get:
       responses:
@@ -303,121 +509,6 @@ paths:
     parameters:
     - name: id
       description: The Service unique identifier
-      schema:
-        type: string
-      in: path
-      required: true
-  /v1/configurationPlans/{id}:
-    get:
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConfigurationPlan'
-          description: The Configuration Plan matching requested id
-        "404":
-          description: Configuration Plan with this id is unknown
-      security:
-      - jwt-bearer: []
-      operationId: getConfigPlan
-    put:
-      requestBody:
-        description: The updated Configuration Plan
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ConfigurationPlan'
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConfigurationPlan'
-          description: Configuration Plan has been updated
-        "404":
-          description: Configuration Plan with id not found
-      security:
-      - jwt-bearer: []
-      operationId: updateConfigPlan
-    delete:
-      responses:
-        "204":
-          description: Successfully deleted
-        "404":
-          description: Configuration with id not found
-      security:
-      - jwt-bearer: []
-      operationId: deleteConfigPlan
-    parameters:
-    - name: id
-      description: Configuration Plan unique identifier
-      schema:
-        type: string
-      in: path
-      required: true
-  /v1/configurationPlans/{id}/renewApiKey:
-    put:
-      parameters:
-      - name: id
-        description: The Configuration Plan unique identifier
-        schema:
-          type: string
-        in: path
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConfigurationPlan'
-          description: The updated Configuration Plan
-      operationId: renewConfigPlanApiKey
-  /v1/expositions/active:
-    get:
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ActiveExposition'
-          description: The list of active Expositions
-      security:
-      - jwt-bearer: []
-      operationId: getActiveExpositions
-  /v1/expositions/{id}:
-    get:
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Exposition'
-          description: The Exposition with provided id
-        "404":
-          description: Exposition with this id is unknown
-      security:
-      - jwt-bearer: []
-      operationId: getExposition
-    delete:
-      responses:
-        "204":
-          description: Exposition deleted
-        "404":
-          content:
-            text/plain:
-              schema:
-                type: string
-          description: Exposition with this is is not found
-      security:
-      - jwt-bearer: []
-      operationId: deleteExposition
-    parameters:
-    - name: id
-      description: Exposition unique identifier
       schema:
         type: string
       in: path
@@ -465,95 +556,6 @@ paths:
         type: string
       in: path
       required: true
-  /v1/expositions/active/{id}:
-    get:
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ActiveExposition'
-          description: The active exposition with provided id
-        "404":
-          description: Exposition with this id is unknown
-      security:
-      - jwt-bearer: []
-      operationId: getActiveExposition
-    parameters:
-    - name: id
-      description: The unique identifier of the active Exposition to manage
-      schema:
-        type: string
-      in: path
-      required: true
-  /v1/gatewayGroups/{id}:
-    get:
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GatewayGroup'
-          description: The GatewayGroupd with provided id
-      security:
-      - jwt-bearer: []
-      operationId: getGatewayGroup
-    put:
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GatewayGroup'
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GatewayGroup'
-          description: The updated GatewayGroup
-        "404":
-          description: GatewayGroup with id is unknown
-      security:
-      - jwt-bearer: []
-      operationId: updateGatewayGroup
-    delete:
-      responses:
-        "204":
-          description: GatewayGroup succesfully removed
-        "404":
-          description: GatewayGroup with is is unknwon
-      security:
-      - jwt-bearer: []
-      operationId: deleteGateGroup
-    parameters:
-    - name: id
-      description: The unique identifier of GatewayGroup to manage
-      schema:
-        type: string
-      in: path
-      required: true
-  /v1/artifacts/{id}:
-    get:
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Artifact'
-          description: The artifact with matching identifier
-        "404":
-          description: Artifact with this id is unknown
-      security:
-      - jwt-bearer: []
-      operationId: getArtifact
-    parameters:
-    - name: id
-      description: Unique identifier of the Artifact to manage
-      schema:
-        type: string
-      in: path
-      required: true
   /v1/tokens/apiTokens:
     get:
       responses:
@@ -589,10 +591,12 @@ paths:
     delete:
       responses:
         "204":
-          description: ApiToekn has been sucessfully removed
+          description: ApiToken has been successfully removed
         "404":
           description: ApiToken with this id is unknown
       operationId: deleteApiToken
+      security:
+        - jwt-bearer: []
     parameters:
     - name: id
       description: The unique identifier of ApiToken to manage
@@ -600,6 +604,41 @@ paths:
         type: string
       in: path
       required: true
+  /v1/user/profile:
+    get:
+      operationId: getUserProfile
+      summary: Get the current authenticated user profile
+      responses:
+        "200":
+          description: The current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+      security:
+        - jwt-bearer: []
+  /v1/user/profile/defaultOrganization:
+    put:
+      operationId: updateDefaultOrganization
+      summary: Update the default organization of the current authenticated user
+      requestBody:
+        description: The new default organization identifier
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: The updated user profile with the new default organization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        "404":
+          description: User with this name is unknown
+      security:
+        - jwt-bearer: []
 components:
   schemas:
     Artifact:
@@ -1061,6 +1100,36 @@ components:
           - "30"
           - "90"
           type: string
+    UserProfile:
+      type: object
+      properties:
+        firstname:
+          type: string
+          description: The first name of the user
+        lastname:
+          type: string
+          description: The last name of the user
+        defaultOrganizationName:
+          type: string
+          description: The default organization name of the user
+        organizations:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserOrganization'
+    UserOrganization:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: The name of the organization
+        description:
+          type: string
+          description: The description of the organization
+        icon:
+          type: string
+          description: The icon of the organization
   securitySchemes:
     jwt-bearer:
       scheme: bearer
