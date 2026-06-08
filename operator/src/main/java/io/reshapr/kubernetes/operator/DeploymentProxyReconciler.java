@@ -35,7 +35,7 @@ public class DeploymentProxyReconciler implements Reconciler<Deployment> {
     
     public static final String INJECT_ANNOTATION = "io.reshapr/inject";
     public static final String PROXY_INJECTED_LABEL = "reshapr.io/proxy-injected";
-    public static final int DEFAULT_PROXY_PORT = 8080;
+    public static final int DEFAULT_PROXY_PORT = 7777;
 
     private final KubernetesClient client;
 
@@ -47,6 +47,10 @@ public class DeploymentProxyReconciler implements Reconciler<Deployment> {
     public UpdateControl<Deployment> reconcile(Deployment deployment, Context<Deployment> context) {
         Map<String, String> annotations = deployment.getMetadata().getAnnotations();
         String namespace = deployment.getMetadata().getNamespace();
+        if (namespace == null) {
+            namespace = "reshapr-system";
+        }
+        
         String deploymentName = deployment.getMetadata().getName();
         String serviceName = "reshapr-proxy-" + deploymentName;
 
@@ -65,6 +69,23 @@ public class DeploymentProxyReconciler implements Reconciler<Deployment> {
         Service existingService = client.services().inNamespace(namespace).withName(serviceName).get();
         if (existingService == null) {
             logger.infof("Creating dedicated Service %s in namespace %s", serviceName, namespace);
+            
+            // Resolve proxy port
+            int proxyPort = DEFAULT_PROXY_PORT;
+            String portStr = annotations.get("io.reshapr/proxy-port");
+            if (portStr == null) {
+                try {
+                    var configMap = client.configMaps().inNamespace(namespace).withName("reshapr-injection-config").get();
+                    if (configMap != null && configMap.getData() != null && configMap.getData().containsKey("proxy-port")) {
+                        portStr = configMap.getData().get("proxy-port");
+                    }
+                } catch (Exception ignored) {}
+            }
+            if (portStr != null && !portStr.isBlank()) {
+                try {
+                    proxyPort = Integer.parseInt(portStr);
+                } catch (NumberFormatException ignored) {}
+            }
             
             Map<String, String> serviceSelector = new HashMap<>();
             serviceSelector.put(PROXY_INJECTED_LABEL, "true");
@@ -89,8 +110,8 @@ public class DeploymentProxyReconciler implements Reconciler<Deployment> {
                         .withSelector(serviceSelector)
                         .addNewPort()
                             .withName("proxy")
-                            .withPort(DEFAULT_PROXY_PORT)
-                            .withNewTargetPort(DEFAULT_PROXY_PORT)
+                            .withPort(proxyPort)
+                            .withNewTargetPort(proxyPort)
                         .endPort()
                     .endSpec()
                     .build();

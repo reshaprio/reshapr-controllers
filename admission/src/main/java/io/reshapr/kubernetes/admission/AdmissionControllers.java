@@ -74,8 +74,8 @@ public class AdmissionControllers {
             // Fetch defaults from ConfigMap
             String namespace = resource.getMetadata().getNamespace();
             if (namespace == null) {
-                // If namespace is not set on the resource, it defaults to "default" in Kubernetes
-                namespace = "default";
+                // If namespace is not set on the resource, it defaults to "reshapr-system" in Kubernetes
+                namespace = "reshapr-system";
             }
             
             Map<String, String> configMapData = new HashMap<>();
@@ -88,11 +88,22 @@ public class AdmissionControllers {
                 // Ignore if ConfigMap doesn't exist or client fails
             }
 
+            // 0. Resolve proxy port
+            int proxyPort = 7777;
+            String portStr = annotations.containsKey("io.reshapr/proxy-port") 
+                ? annotations.get("io.reshapr/proxy-port") 
+                : configMapData.get("proxy-port");
+            if (portStr != null && !portStr.isBlank()) {
+                try {
+                    proxyPort = Integer.parseInt(portStr);
+                } catch (NumberFormatException ignored) {}
+            }
+
             ContainerBuilder proxyBuilder = new ContainerBuilder()
                   .withName(PROXY_CONTAINER_NAME)
                   .withImage(DEFAULT_PROXY_IMAGE)
                   .addNewPort()
-                     .withContainerPort(8080)
+                     .withContainerPort(proxyPort)
                      .withName("proxy")
                   .endPort();
                   
