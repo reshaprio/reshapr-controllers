@@ -65,6 +65,10 @@ public class ReshaprApiClientFactory {
     * @return The base URL of the control plane.
     */
    public String resolveControlPlaneUrl(String serviceName, String namespace, int port) {
+      // If service name already ends with the cluster local suffix, use it as is.
+      if (serviceName.endsWith(".svc.cluster.local")) {
+         return "http://" + serviceName + ":" + port;
+      }
       // If service name contains a dot, assume it's qualified with namespace.
       if (serviceName.contains(".")) {
          return "http://" + serviceName + ".svc.cluster.local:" + port;

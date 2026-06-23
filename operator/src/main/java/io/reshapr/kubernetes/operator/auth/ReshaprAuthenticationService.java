@@ -91,8 +91,10 @@ public class ReshaprAuthenticationService {
                   "Authentication failed with status " + response.statusCode()
                         + ": " + response.body());
          }
-      } catch (IOException | InterruptedException e) {
+      } catch (InterruptedException e) {
          Thread.currentThread().interrupt();
+         throw new ReshaprAuthenticationException("Interrupted while authenticating with reShapr control plane", e);
+      } catch (IOException e) {
          throw new ReshaprAuthenticationException("Failed to authenticate with reShapr control plane", e);
       }
    }
