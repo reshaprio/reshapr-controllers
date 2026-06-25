@@ -1,6 +1,6 @@
 project:
-  name: Reshapr
-  description: Reshapr core project
+  name: Reshapr controllers
+  description: Reshapr Kubernetes controllers project
   copyright: The Reshapr Authors
   java:
     version: '25'
