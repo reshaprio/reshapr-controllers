@@ -278,31 +278,4 @@ public class ServiceReconciler extends BaseReshaprReconciler<Service> implements
    }
 
 
-   /**
-    * Find a control plane Service matching the given name and, when provided, version.
-    * Paginates through the control plane Services until a match is found or the list is exhausted.
-    * @return the matching {@link io.reshapr.client.model.Service}, or {@code null} if none matches.
-    */
-   private io.reshapr.client.model.Service findRemoteService(DefaultApi api, String name, String version)
-         throws ApiException {
-      BigDecimal size = BigDecimal.valueOf(PAGE_SIZE);
-      int pageNumber = 0;
-      while (true) {
-         List<io.reshapr.client.model.Service> page = api.getServices(BigDecimal.valueOf(pageNumber), size);
-         if (page == null || page.isEmpty()) {
-            return null;
-         }
-         for (io.reshapr.client.model.Service candidate : page) {
-            boolean nameMatches = name.equals(candidate.getName());
-            boolean versionMatches = version == null || version.isBlank() || version.equals(candidate.getVersion());
-            if (nameMatches && versionMatches) {
-               return candidate;
-            }
-         }
-         if (page.size() < PAGE_SIZE) {
-            return null;
-         }
-         pageNumber++;
-      }
-   }
 }

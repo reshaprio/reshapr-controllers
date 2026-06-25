@@ -27,7 +27,11 @@ import io.javaoperatorsdk.operator.api.reconciler.Reconciler;
 import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
 import org.jboss.logging.Logger;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
+import io.reshapr.client.api.DefaultApi;
+import io.reshapr.client.ApiException;
 /**
  * Abstract base reconciler providing authentication and API client setup for
  * all reShapr custom resource reconcilers.
@@ -159,5 +163,33 @@ public abstract class BaseReshaprReconciler<R extends CustomResource<?, ?>> impl
          return null;
       }
       return apiClientFactory.createAuthenticatedApiClient(instance, organization);
+   }
+
+   /**
+    * Find a control plane Service matching the given name and, when provided, version.
+    * Paginates through the control plane Services until a match is found or the list is exhausted.
+    * @return the matching {@link io.reshapr.client.model.Service}, or {@code null} if none matches.
+    */
+   protected io.reshapr.client.model.Service findRemoteService(DefaultApi api, String name, String version)
+         throws ApiException {
+      BigDecimal size = BigDecimal.valueOf(50);
+      int pageNumber = 0;
+      while (true) {
+         List<io.reshapr.client.model.Service> page = api.getServices(BigDecimal.valueOf(pageNumber), size);
+         if (page == null || page.isEmpty()) {
+            return null;
+         }
+         for (io.reshapr.client.model.Service candidate : page) {
+            boolean nameMatches = name.equals(candidate.getName());
+            boolean versionMatches = version == null || version.isBlank() || version.equals(candidate.getVersion());
+            if (nameMatches && versionMatches) {
+               return candidate;
+            }
+         }
+         if (page.size() < 50) {
+            return null;
+         }
+         pageNumber++;
+      }
    }
 }
