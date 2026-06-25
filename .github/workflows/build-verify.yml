@@ -1,6 +1,10 @@
 name: build-verify-package
 on:
   push:
+    branches:
+      - main
+    tags:
+      - '*'
     paths-ignore:
       #- '.github/**'
       - '.gitignore'
@@ -53,9 +57,9 @@ jobs:
             echo "PACKAGE_IMAGE=false" >> "$GITHUB_OUTPUT"
           fi
 
-        outputs:
-          image-tag: ${{ steps.set-environment.outputs.IMAGE_TAG }}
-          package-image: ${{ steps.set-environment.outputs.PACKAGE_IMAGE }}
+    outputs:
+      image-tag: ${{ steps.set-environment.outputs.IMAGE_TAG }}
+      package-image: ${{ steps.set-environment.outputs.PACKAGE_IMAGE }}
 
   container-images-build:
     needs:
