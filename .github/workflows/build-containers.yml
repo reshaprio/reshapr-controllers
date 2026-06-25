@@ -92,7 +92,7 @@ jobs:
 
       - name: Sign the operator image with GitHub OIDC Token
         env:
-          DIGEST: ${{ steps.build-and-push-ctrl.outputs.digest }}
+          DIGEST: ${{ steps.build-and-push-operator.outputs.digest }}
           TAGS: quay.io/reshapr/reshapr-operator:${{env.IMAGE_TAG}} docker.io/reshapr/reshapr-operator:${{env.IMAGE_TAG}}
         run: |
           images=""
