@@ -16,6 +16,7 @@
 package io.reshapr.kubernetes.api.service.v1alpha1;
 
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import io.reshapr.kubernetes.api.model.Status;
 
 /**
  * This the {@code status} of a {@link Service} custom resource.
@@ -23,8 +24,33 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
  */
 public class ServiceStatus {
 
+   @JsonPropertyDescription("Global status of the reconciliation")
+   private Status status = Status.UNKNOWN;
+
+   @JsonPropertyDescription("Detailed message about the current status")
+   private String message;
+
    @JsonPropertyDescription("Reconciled generation")
    private long observedGeneration;
+
+   @JsonPropertyDescription("Identifier of the corresponding Service in the reShapr control plane")
+   private String serviceId;
+
+   public Status getStatus() {
+      return status;
+   }
+
+   public void setStatus(Status status) {
+      this.status = status;
+   }
+
+   public String getMessage() {
+      return message;
+   }
+
+   public void setMessage(String message) {
+      this.message = message;
+   }
 
    public long getObservedGeneration() {
       return observedGeneration;
@@ -32,5 +58,13 @@ public class ServiceStatus {
 
    public void setObservedGeneration(long observedGeneration) {
       this.observedGeneration = observedGeneration;
+   }
+
+   public String getServiceId() {
+      return serviceId;
+   }
+
+   public void setServiceId(String serviceId) {
+      this.serviceId = serviceId;
    }
 }

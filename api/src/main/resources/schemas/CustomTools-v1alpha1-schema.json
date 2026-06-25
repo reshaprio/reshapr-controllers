@@ -65,16 +65,67 @@
       "$id": "#/definitions/customToolItem",
       "type": "object",
       "title": "One custom tool definition",
-      "description": "One custom tool definition",
+      "description": "One custom tool definition. It is either a declarative mapping to a target tool (tool + arguments) or a custom script logic (script + tools).",
       "required": [
-        "tool",
         "description",
         "input"
+      ],
+      "oneOf": [
+        {
+          "title": "Declarative mapping form",
+          "required": [
+            "tool"
+          ],
+          "not": {
+            "required": [
+              "script"
+            ]
+          }
+        },
+        {
+          "title": "Custom script form",
+          "required": [
+            "script",
+            "tools"
+          ],
+          "not": {
+            "required": [
+              "tool"
+            ]
+          }
+        }
       ],
       "properties": {
         "tool": {
           "type": "string",
           "title": "The name of the target tool, e.g., 'user', 'createIssue', etc."
+        },
+        "script": {
+          "type": "string",
+          "title": "A custom JavaScript logic executed via QuickJS4J.",
+          "description": "The script may call other tools through the 'rs' host API (rs.callTool, rs.callToolAsync, rs.awaitPromises) and must return a JSON object used as the tool result."
+        },
+        "tools": {
+          "type": "array",
+          "title": "The exhaustive list of tools the script is allowed to call.",
+          "description": "Used both as a security allow-list and to pre-check elicitation secrets before running the script. Required when 'script' is set.",
+          "items": {
+            "type": "object",
+            "required": [
+              "tool"
+            ],
+            "properties": {
+              "tool": {
+                "type": "string",
+                "title": "The name of the target tool to call."
+              },
+              "service": {
+                "type": "string",
+                "title": "The target service for cross-service calls, expressed as the readable couple '<service_name:service_version>'.",
+                "description": "Omit for a tool of the same service. The service is resolved within the current organization."
+              }
+            }
+          }
         },
         "description": {
           "type": "string",

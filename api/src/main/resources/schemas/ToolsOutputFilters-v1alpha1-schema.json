@@ -98,8 +98,7 @@
         },
         "convertToToon": {
           "type": "boolean",
-          "title": "Whether to convert the final JSON output to Toon format for a more compact LLM-friendly representation.",
-          "const": true
+          "title": "Whether to convert the final JSON output to Toon format for a more compact LLM-friendly representation."
         }
       }
     },

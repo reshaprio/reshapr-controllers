@@ -89,6 +89,22 @@ public class ReshaprApiClientFactory {
     */
    public DefaultApi createAuthenticatedApi(String instanceServiceName, String organization)
          throws ReshaprAuthenticationException {
+      return new DefaultApi(createAuthenticatedApiClient(instanceServiceName, organization));
+   }
+
+   /**
+    * Create an authenticated low-level {@link ApiClient} for the given control plane
+    * instance and organization. Useful to share the same authenticated client between
+    * the generated {@link DefaultApi} and hand-written calls (e.g. form-urlencoded endpoints).
+    * @param instanceServiceName The Kubernetes Service name of the control plane
+    *                            (from the {@code reshapr.io/instance} annotation).
+    * @param organization        The organization to impersonate
+    *                            (from the {@code reshapr.io/organization} annotation).
+    * @return An authenticated {@link ApiClient} with base URI and JWT bearer configured.
+    * @throws ReshaprAuthenticationException if authentication fails.
+    */
+   public ApiClient createAuthenticatedApiClient(String instanceServiceName, String organization)
+         throws ReshaprAuthenticationException {
 
       String baseUrl = resolveControlPlaneUrl(instanceServiceName);
       logger.infof("Creating authenticated API client for instance=%s, organization=%s",
@@ -99,11 +115,16 @@ public class ReshaprApiClientFactory {
 
       // Configure the generated API client with the base URL and JWT bearer.
       ApiClient apiClient = new ApiClient();
+
+      // Now we must also add the '/api' prefix to access non-auth API endpoints if not already provided.
+      if (!baseUrl.endsWith("/api")) {
+         baseUrl += "/api";
+      }
       apiClient.updateBaseUri(baseUrl);
       apiClient.setRequestInterceptor(builder ->
             builder.header("Authorization", "Bearer " + jwtToken)
       );
 
-      return new DefaultApi(apiClient);
+      return apiClient;
    }
 }

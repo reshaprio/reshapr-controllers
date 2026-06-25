@@ -16,8 +16,68 @@ paths:
     post:
       requestBody:
         content:
-          multipart/form-data: {}
-          application/x-www-form-urlencoded: {}
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  description: The specification file to import as an artifact
+                  type: string
+                  format: binary
+                mainArtifact:
+                  description: Whether this artifact is a primary one (default is true)
+                  type: boolean
+                  default: true
+                serviceName:
+                  description: Name to assign to the imported Service (overrides the one from the specification)
+                  type: string
+                serviceVersion:
+                  description: Version to assign to the imported Service (overrides the one from the specification)
+                  type: string
+                includedOperations:
+                  description: List of operation names to include from the specification
+                  type: array
+                  items:
+                    type: string
+                excludedOperations:
+                  description: List of operation names to exclude from the specification
+                  type: array
+                  items:
+                    type: string
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  description: The remote URL of the specification to import as an artifact
+                  type: string
+                mainArtifact:
+                  description: Whether this artifact is a primary one (default is true)
+                  type: boolean
+                  default: true
+                secretName:
+                  description: Name of the Secret to use for authenticating the remote URL fetch
+                  type: string
+                serviceName:
+                  description: Name to assign to the imported Service (overrides the one from the specification)
+                  type: string
+                serviceVersion:
+                  description: Version to assign to the imported Service (overrides the one from the specification)
+                  type: string
+                includedOperations:
+                  description: List of operation names to include from the specification
+                  type: array
+                  items:
+                    type: string
+                excludedOperations:
+                  description: List of operation names to exclude from the specification
+                  type: array
+                  items:
+                    type: string
         required: true
       responses:
         "200":
@@ -27,7 +87,7 @@ paths:
                 $ref: '#/components/schemas/Artifact'
           description: Artifact imported
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: importArtifact
   /v1/artifacts/attach:
     post:
@@ -90,12 +150,12 @@ paths:
   /v1/configurationPlans:
     get:
       parameters:
-      - name: serviceId
-        description: Service unique identifier
-        schema:
-          type: string
-        in: query
-        required: true
+        - name: serviceId
+          description: Service unique identifier
+          schema:
+            type: string
+          in: query
+          required: true
       responses:
         "200":
           content:
@@ -106,7 +166,7 @@ paths:
                   $ref: '#/components/schemas/ConfigurationPlan'
           description: Get the list of ConfigurationPlan by service identifier
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: getConfigPlans
     post:
       requestBody:
@@ -131,7 +191,7 @@ paths:
           description: "One COnfiguration Plan dependency (service, secret, ...) cannot\
             \ be found"
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: createConfigPlan
   /v1/configurationPlans/{id}:
     get:
@@ -203,16 +263,16 @@ paths:
   /v1/expositions:
     get:
       parameters:
-      - name: serviceId
-        description: Unique identifier of the Service to get Expositions for
-        schema:
-          type: string
-        in: query
-      - name: gatewayGroupId
-        description: 'Indeitfier of the Gateway Group to get Expositions for '
-        schema:
-          type: string
-        in: query
+        - name: serviceId
+          description: Unique identifier of the Service to get Expositions for
+          schema:
+            type: string
+          in: query
+        - name: gatewayGroupId
+          description: 'Identifier of the Gateway Group to get Expositions for '
+          schema:
+            type: string
+          in: query
       responses:
         "200":
           content:
@@ -222,9 +282,9 @@ paths:
                 items:
                   $ref: '#/components/schemas/Exposition'
           description: Get the expositions - either all or filtered by Service or
-            Gateway Groupd
+            Gateway Group
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: getExpositions
     post:
       requestBody:
@@ -248,7 +308,7 @@ paths:
           description: One of exposition dependency (Configuration Plan or Gateway
             Group) cannot be found
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: createExposition
   /v1/expositions/{id}:
     get:
@@ -331,7 +391,7 @@ paths:
                   $ref: '#/components/schemas/GatewayGroup'
           description: The available GatewayGroups
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: listGatewayGroups
     post:
       requestBody:
@@ -350,7 +410,7 @@ paths:
         "429":
           description: Quotas of GatewayGroups exceeded
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: createGatewayGroup
   /v1/gatewayGroups/{id}:
     get:
@@ -411,21 +471,35 @@ paths:
                   $ref: '#/components/schemas/Quota'
           description: Get the quotas of the user's organization
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: getQuotas
+  /v1/gateways:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GatewayView'
+          description: The gateways currently active in the user's organization
+      security:
+        - jwt-bearer: []
+      operationId: listGateways
   /v1/secrets:
     get:
       parameters:
-      - name: page
-        description: The number of the page to fetch (default is 0)
-        schema:
-          type: integer
-        in: query
-      - name: size
-        description: The number of secrets in a page to fetch (default is 20)
-        schema:
-          type: integer
-        in: query
+        - name: page
+          description: The number of the page to fetch (default is 0)
+          schema:
+            type: integer
+          in: query
+        - name: size
+          description: The number of secrets in a page to fetch (default is 20)
+          schema:
+            type: integer
+          in: query
       responses:
         "200":
           content:
@@ -436,7 +510,7 @@ paths:
                   $ref: '#/components/schemas/Secret'
           description: Get the user's organization secrets
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: getSecrets
     post:
       requestBody:
@@ -456,21 +530,21 @@ paths:
         "409":
           description: Secret with this name already exists in the organization
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: createSecret
   /v1/services:
     get:
       parameters:
-      - name: page
-        description: Number of page to fetch (default to 0)
-        schema:
-          type: number
-        in: query
-      - name: size
-        description: Size of the page to fetch (default to 20)
-        schema:
-          type: number
-        in: query
+        - name: page
+          description: Number of page to fetch (default to 0)
+          schema:
+            type: number
+          in: query
+        - name: size
+          description: Size of the page to fetch (default to 20)
+          schema:
+            type: number
+          in: query
       responses:
         "200":
           content:
@@ -481,7 +555,7 @@ paths:
                   $ref: '#/components/schemas/Service'
           description: The list of fetched Services
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: getServices
   /v1/services/{id}:
     get:
@@ -495,7 +569,7 @@ paths:
         "404":
           description: Service with id is unknown
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: getServiceView
     delete:
       responses:
@@ -504,15 +578,15 @@ paths:
         "404":
           description: Service is unknown
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: deleteService
     parameters:
-    - name: id
-      description: The Service unique identifier
-      schema:
-        type: string
-      in: path
-      required: true
+      - name: id
+        description: The Service unique identifier
+        schema:
+          type: string
+        in: path
+        required: true
   /v1/secrets/{id}:
     get:
       responses:
@@ -538,7 +612,7 @@ paths:
                 $ref: '#/components/schemas/Secret'
           description: The updated secret
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: updateSecret
     delete:
       responses:
@@ -547,15 +621,15 @@ paths:
         "404":
           description: Secret with this id is unknown
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: deleteSecret
     parameters:
-    - name: id
-      description: The unique identifier of the Secret to manage
-      schema:
-        type: string
-      in: path
-      required: true
+      - name: id
+        description: The unique identifier of the Secret to manage
+        schema:
+          type: string
+        in: path
+        required: true
   /v1/tokens/apiTokens:
     get:
       responses:
@@ -568,7 +642,7 @@ paths:
                   $ref: '#/components/schemas/ApiToken'
           description: The list of ApiTokens for this organization
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: getApiTokens
     post:
       requestBody:
@@ -585,7 +659,7 @@ paths:
                 $ref: '#/components/schemas/ApiToken'
           description: The newmy created ApiToken
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: createApiToken
   /v1/tokens/apiTokens/{id}:
     delete:
@@ -598,12 +672,12 @@ paths:
       security:
         - jwt-bearer: []
     parameters:
-    - name: id
-      description: The unique identifier of ApiToken to manage
-      schema:
-        type: string
-      in: path
-      required: true
+      - name: id
+        description: The unique identifier of ApiToken to manage
+        schema:
+          type: string
+        in: path
+        required: true
   /v1/user/profile:
     get:
       operationId: getUserProfile
@@ -644,13 +718,13 @@ components:
     Artifact:
       description: An Artifact in Micepe control plane
       required:
-      - id
-      - organizationId
-      - name
-      - content
-      - mainArtifact
-      - type
-      - sourceArtifact
+        - id
+        - organizationId
+        - name
+        - content
+        - mainArtifact
+        - type
+        - sourceArtifact
       type: object
       properties:
         id:
@@ -680,25 +754,25 @@ components:
     ArtifactType:
       description: The supported type of Artifact
       enum:
-      - JSON_SCHEMA
-      - OPEN_API_SPEC
-      - GRAPHQL_SCHEMA
-      - PROTOBUF_SCHEMA
-      - PROTOBUF_DESCRIPTOR
-      - JSON_FRAGMENT
-      - RESHAPR_PROMPTS
-      - RESHAPR_CUSTOM_TOOLS
-      - RESHAPR_RESOURCES
+        - JSON_SCHEMA
+        - OPEN_API_SPEC
+        - GRAPHQL_SCHEMA
+        - PROTOBUF_SCHEMA
+        - PROTOBUF_DESCRIPTOR
+        - JSON_FRAGMENT
+        - RESHAPR_PROMPTS
+        - RESHAPR_CUSTOM_TOOLS
+        - RESHAPR_RESOURCES
       type: string
     ArtifactReference:
       description: Basic information about an Artifact in reShapr control plane
       required:
-      - id
-      - organizationId
-      - name
-      - mainArtifact
-      - type
-      - sourceArtifact
+        - id
+        - organizationId
+        - name
+        - mainArtifact
+        - type
+        - sourceArtifact
       type: object
       properties:
         id:
@@ -725,8 +799,8 @@ components:
     ConfigurationPlanSummary:
       description: The summary of a ConfigurationPlan in reShapr control plane
       required:
-      - id
-      - backendEndpoint
+        - id
+        - backendEndpoint
       type: object
       properties:
         id:
@@ -741,8 +815,8 @@ components:
     SecretType:
       description: The types of Secret available in Micepe
       enum:
-      - ARTIFACT
-      - ENDPOINT
+        - ARTIFACT
+        - ENDPOINT
       type: string
     ServiceView:
       description: An aggregated view no Service and related elements in Micepe
@@ -753,18 +827,18 @@ components:
     ServiceType:
       description: The available types of Service in reShapr
       enum:
-      - REST
-      - GRAPHQL
-      - GRPC
+        - REST
+        - GRAPHQL
+        - GRPC
       type: string
     ValidityPeriod:
       description: 'The available duration that representation a validity period in
         Micepe '
       enum:
-      - "1"
-      - "7"
-      - "30"
-      - "90"
+        - "1"
+        - "7"
+        - "30"
+        - "90"
       type: string
     Exposition:
       description: An Exposition in reShapr control plane
@@ -772,13 +846,10 @@ components:
     ExpositionReference:
       description: A reference to an Exposition in reShapr control plane
       type: object
-    Gateway:
-      description: A Gateway in Micepe control plane
-      type: object
     Operation:
-      description: A Service Operation in Micepe control plane
+      description: A Service Operation in reShapr control plane
       required:
-      - name
+        - name
       type: object
       properties:
         name:
@@ -788,7 +859,7 @@ components:
           description: HTTP or protocol specification method if it makes sense
           type: string
         action:
-          description: Denoted operation action (dependig on the protocol)
+          description: Denoted operation action (depending on the protocol)
           type: string
         intputName:
           description: Name of input message type
@@ -799,12 +870,12 @@ components:
     Service:
       description: A Service in Micepe control plane
       required:
-      - id
-      - organizationId
-      - name
-      - version
-      - createdOn
-      - type
+        - id
+        - organizationId
+        - name
+        - version
+        - createdOn
+        - type
       type: object
       properties:
         id:
@@ -829,11 +900,11 @@ components:
     ConfigurationPlan:
       description: A ConfigurationPlan in Micepe control plane
       required:
-      - id
-      - organizationId
-      - backendEndpoint
-      - name
-      - serviceId
+        - id
+        - organizationId
+        - backendEndpoint
+        - name
+        - serviceId
       type: object
       properties:
         id:
@@ -881,11 +952,11 @@ components:
       description: An Exposition that is currently active. ie. exposed by at least
         one Gateway
       required:
-      - service
-      - configurationPlan
-      - gateways
-      - id
-      - organizationId
+        - service
+        - configurationPlan
+        - gateways
+        - id
+        - organizationId
       type: object
       properties:
         service:
@@ -906,10 +977,10 @@ components:
           description: Unique identifier of the organization of the Exposition
           type: string
     ConfigurationPlanView:
-      description: Minimal representation of a COnfiguration Plan
+      description: Minimal representation of a Configuration Plan
       required:
-      - id
-      - backendEndpoint
+        - id
+        - backendEndpoint
       type: object
       properties:
         id:
@@ -918,12 +989,12 @@ components:
         backendEndpoint:
           description: ""
           type: string
-    GatewayView:
+    Gateway:
       description: Minimalist representation of a Gateway
       required:
-      - id
-      - name
-      - fqdns
+        - id
+        - name
+        - fqdns
       type: object
       properties:
         id:
@@ -940,12 +1011,12 @@ components:
     Quota:
       description: A Quota in control plance
       required:
-      - id
-      - organizationId
-      - metric
-      - enabled
-      - limit
-      - remaining
+        - id
+        - organizationId
+        - metric
+        - enabled
+        - limit
+        - remaining
       type: object
       properties:
         id:
@@ -971,9 +1042,9 @@ components:
     Secret:
       description: A Secret in the control plane
       required:
-      - organizationId
-      - name
-      - type
+        - organizationId
+        - name
+        - type
       type: object
       properties:
         id:
@@ -1014,9 +1085,9 @@ components:
     OAuth2ClientConfiguration:
       description: The configuration of an OAuth2 client
       required:
-      - clientId
-      - authorizationEndpoint
-      - tokenEndpoint
+        - clientId
+        - authorizationEndpoint
+        - tokenEndpoint
       type: object
       properties:
         clientId:
@@ -1034,9 +1105,9 @@ components:
     GatewayGroup:
       description: A GatewayGroup in Reshapr control plane
       required:
-      - id
-      - organizationId
-      - name
+        - id
+        - organizationId
+        - name
       type: object
       properties:
         id:
@@ -1053,14 +1124,55 @@ components:
           description: The labels attached to this gateway group (key=value pairs)
           type: object
           additionalProperties: true
+    GatewayView:
+      description: A gateway currently active and reporting health to the Reshapr control plane
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          description: The unique identifier of this Gateway
+          type: string
+        organizationId:
+          description: Identifier of the organization owning this gateway
+          type: string
+        name:
+          description: The unique name of this Gateway
+          type: string
+        version:
+          description: The version of the gateway runtime advertised during registration
+          type: string
+        startedAt:
+          format: date-time
+          description: The timestamp when this gateway was started
+          type: string
+        lastHeartbeat:
+          format: date-time
+          description: The timestamp of the last heartbeat received from this gateway
+          type: string
+        fqdns:
+          description: The list of fully-qualified domain names served by this gateway
+          type: array
+          items:
+            type: string
+        labels:
+          description: The labels advertised by this gateway during registration (key=value pairs)
+          type: object
+          additionalProperties: true
+        gatewayGroups:
+          description: The gateway groups this gateway is mapped to
+          type: array
+          items:
+            $ref: '#/components/schemas/GatewayGroup'
     ApiToken:
       description: An API token for the Reshapr control plane
       required:
-      - id
-      - organizationId
-      - name
-      - username
-      - validUntil
+        - id
+        - organizationId
+        - name
+        - username
+        - validUntil
       type: object
       properties:
         id:
@@ -1085,8 +1197,8 @@ components:
     ApiTokenRequest:
       description: ""
       required:
-      - name
-      - validityDays
+        - name
+        - validityDays
       type: object
       properties:
         name:
@@ -1095,10 +1207,10 @@ components:
         validityDays:
           description: THe number of days this token will be valid from today
           enum:
-          - "1"
-          - "7"
-          - "30"
-          - "90"
+            - "1"
+            - "7"
+            - "30"
+            - "90"
           type: string
     UserProfile:
       type: object

@@ -15,6 +15,7 @@
  */
 package io.reshapr.kubernetes.api.service.v1alpha1;
 
+import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.model.annotation.Group;
@@ -34,5 +35,5 @@ import io.sundr.builder.annotations.BuildableReference;
 @Plural("services")
 @Buildable(editableEnabled = false, builderPackage = "io.fabric8.kubernetes.api.builder", refs = {
       @BuildableReference(ObjectMeta.class) })
-public class Service extends CustomResource<ServiceSpec, ServiceStatus> {
+public class Service extends CustomResource<ServiceSpec, ServiceStatus> implements Namespaced {
 }

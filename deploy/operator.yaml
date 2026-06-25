@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: reshapr-system
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: reshapr-operator
+  namespace: reshapr-system
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reshapr-operator
+  namespace: reshapr-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: reshapr-operator
+  template:
+    metadata:
+      labels:
+        name: reshapr-operator
+    spec:
+      serviceAccountName: reshapr-operator
+      containers:
+        - name: reshapr-operator
+          image: quay.io/lbroudoux/reshapr-operator:nightly
+          imagePullPolicy: Always
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: reshapr-operator
+          volumeMounts:
+            - name: sa-token
+              mountPath: /var/run/secrets/reshapr/serviceaccount
+      volumes:
+        - name: sa-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  audience: https://app.reshapr.io
+                  expirationSeconds: 3600
+                  path: token
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: reshapr-operator
+rules:
+  - apiGroups:
+      - reshapr.io
+    resources:
+      - '*'
+    verbs:
+      - '*'
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: reshapr-operator
+subjects:
+  - kind: ServiceAccount
+    name: reshapr-operator
+    namespace: reshapr-system
+roleRef:
+  kind: ClusterRole
+  name: reshapr-operator
+  apiGroup: ""
