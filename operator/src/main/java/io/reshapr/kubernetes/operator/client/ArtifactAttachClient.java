@@ -48,20 +48,21 @@ public class ArtifactAttachClient {
    private static final Logger logger = Logger.getLogger(ArtifactAttachClient.class);
 
    private static final String ATTACH_ARTIFACT_PATH = "/v1/artifacts/attach";
-   private static final String FORM_CONTENT_TYPE = "application/x-www-form-urlencoded";
+   private static final String BOUNDARY = "---Boundary" + java.util.UUID.randomUUID().toString();
+   private static final String MULTIPART_CONTENT_TYPE = "multipart/form-data; boundary=" + BOUNDARY;
 
    public Artifact attachArtifact(ApiClient apiClient, String serviceId, String name, ArtifactType type, String content, boolean mainArtifact) throws ApiException {
       if (serviceId == null || type == null || content == null) {
          throw new ApiException(400, "Missing required parameters when attaching an artifact");
       }
 
-      String formBody = encodeForm(serviceId, name, type, content, mainArtifact);
+      String multipartBody = buildMultipartBody(serviceId, name, type, content, mainArtifact);
 
       HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
             .uri(URI.create(apiClient.getBaseUri() + ATTACH_ARTIFACT_PATH))
-            .header("Content-Type", FORM_CONTENT_TYPE)
+            .header("Content-Type", MULTIPART_CONTENT_TYPE)
             .header("Accept", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(formBody, UTF_8));
+            .POST(HttpRequest.BodyPublishers.ofString(multipartBody, UTF_8));
 
       if (apiClient.getReadTimeout() != null) {
          requestBuilder.timeout(apiClient.getReadTimeout());
@@ -93,20 +94,29 @@ public class ArtifactAttachClient {
       }
    }
 
-   private String encodeForm(String serviceId, String name, ArtifactType type, String content, boolean mainArtifact) {
-      List<String> parts = new ArrayList<>();
-      parts.add(field("serviceId", serviceId));
+   private String buildMultipartBody(String serviceId, String name, ArtifactType type, String content, boolean mainArtifact) {
+      StringBuilder builder = new StringBuilder();
+
+      addFormField(builder, "serviceId", serviceId);
       if (name != null) {
-         parts.add(field("name", name));
+         addFormField(builder, "name", name);
       }
-      parts.add(field("type", type.getValue()));
-      parts.add(field("content", content));
-      parts.add(field("mainArtifact", String.valueOf(mainArtifact)));
-      return String.join("&", parts);
+      addFormField(builder, "type", type.getValue());
+      addFormField(builder, "mainArtifact", String.valueOf(mainArtifact));
+
+      builder.append("--").append(BOUNDARY).append("\r\n");
+      builder.append("Content-Disposition: form-data; name=\"file\"; filename=\"artifact.json\"\r\n");
+      builder.append("Content-Type: application/json\r\n\r\n");
+      builder.append(content).append("\r\n");
+
+      builder.append("--").append(BOUNDARY).append("--\r\n");
+      return builder.toString();
    }
 
-   private String field(String name, String value) {
-      return ApiClient.urlEncode(name) + "=" + ApiClient.urlEncode(value);
+   private void addFormField(StringBuilder builder, String name, String value) {
+      builder.append("--").append(BOUNDARY).append("\r\n");
+      builder.append("Content-Disposition: form-data; name=\"").append(name).append("\"\r\n\r\n");
+      builder.append(value).append("\r\n");
    }
 
    private String readBody(HttpResponse<InputStream> response) throws IOException {

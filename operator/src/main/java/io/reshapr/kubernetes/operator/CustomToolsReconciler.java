@@ -60,10 +60,18 @@ public class CustomToolsReconciler extends BaseArtifactReconciler<CustomTools> {
 
    @Override
    protected String getArtifactContent(CustomTools resource) throws Exception {
-      if (resource.getSpec() == null || resource.getSpec().getCustomTools() == null) {
-         return "{}";
+      com.fasterxml.jackson.databind.node.ObjectNode root = objectMapper.createObjectNode();
+      root.put("apiVersion", "reshapr.io/v1alpha1");
+      root.put("kind", "CustomTools");
+      if (resource.getSpec() != null) {
+         if (resource.getSpec().getService() != null) {
+            root.set("service", objectMapper.valueToTree(resource.getSpec().getService()));
+         }
+         if (resource.getSpec().getCustomTools() != null) {
+            root.set("customTools", objectMapper.valueToTree(resource.getSpec().getCustomTools()));
+         }
       }
-      return objectMapper.writeValueAsString(resource.getSpec().getCustomTools());
+      return objectMapper.writeValueAsString(root);
    }
 
    @Override
