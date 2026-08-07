@@ -23,14 +23,19 @@ import io.reshapr.kubernetes.api.tools.v1alpha1.CustomToolsStatus;
 import io.reshapr.kubernetes.operator.auth.ReshaprApiClientFactory;
 import io.reshapr.kubernetes.operator.client.ArtifactAttachClient;
 
-import static io.javaoperatorsdk.operator.api.reconciler.Constants.WATCH_ALL_NAMESPACES;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javaoperatorsdk.operator.api.config.informer.Informer;
 import io.javaoperatorsdk.operator.api.reconciler.ControllerConfiguration;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import static io.javaoperatorsdk.operator.api.reconciler.Constants.WATCH_ALL_NAMESPACES;
+
+/**
+ * Reconciler for CustomTools custom resource.
+ * Keeps a reShapr {@link CustomTools} custom resource in sync with its counterpart in
+ * the control plane.
+ */
 @ControllerConfiguration(informer = @Informer(namespaces = WATCH_ALL_NAMESPACES))
 @SuppressWarnings("unused")
 @ApplicationScoped

@@ -40,14 +40,10 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
-import java.math.BigDecimal;
-import java.util.List;
-
 import static io.javaoperatorsdk.operator.api.reconciler.Constants.WATCH_ALL_NAMESPACES;
 
 /**
  * Reconciler for ConfigurationPlan custom resource.
- * <p>
  * Keeps a reShapr {@link ConfigurationPlan} custom resource in sync with its counterpart in
  * the control plane.
  */
@@ -56,7 +52,6 @@ import static io.javaoperatorsdk.operator.api.reconciler.Constants.WATCH_ALL_NAM
 public class ConfigurationPlanReconciler extends BaseReshaprReconciler<ConfigurationPlan> implements Cleaner<ConfigurationPlan> {
 
    private final Logger logger = Logger.getLogger(getClass());
-   private static final int PAGE_SIZE = 50;
 
    @Inject
    public ConfigurationPlanReconciler(ReshaprApiClientFactory apiClientFactory) {
@@ -194,28 +189,6 @@ public class ConfigurationPlanReconciler extends BaseReshaprReconciler<Configura
          }
          logger.errorf(e, "Control plane error while deleting ConfigurationPlan for '%s' — retrying", name);
          return DeleteControl.noFinalizerRemoval().rescheduleAfter(RETRY_DELAY_MS);
-      }
-   }
-
-   private io.reshapr.client.model.Service findRemoteService(DefaultApi api, String name, String version) throws ApiException {
-      BigDecimal size = BigDecimal.valueOf(PAGE_SIZE);
-      int pageNumber = 0;
-      while (true) {
-         List<io.reshapr.client.model.Service> page = api.getServices(BigDecimal.valueOf(pageNumber), size);
-         if (page == null || page.isEmpty()) {
-            return null;
-         }
-         for (io.reshapr.client.model.Service candidate : page) {
-            boolean nameMatches = name.equals(candidate.getName());
-            boolean versionMatches = version == null || version.isBlank() || version.equals(candidate.getVersion());
-            if (nameMatches && versionMatches) {
-               return candidate;
-            }
-         }
-         if (page.size() < PAGE_SIZE) {
-            return null;
-         }
-         pageNumber++;
       }
    }
 }
