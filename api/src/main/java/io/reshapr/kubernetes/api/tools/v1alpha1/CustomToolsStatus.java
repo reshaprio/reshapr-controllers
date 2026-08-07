@@ -15,5 +15,46 @@
  */
 package io.reshapr.kubernetes.api.tools.v1alpha1;
 
+import io.reshapr.kubernetes.api.model.Status;
+import io.sundr.builder.annotations.Buildable;
+
+@Buildable(editableEnabled = false, builderPackage = "io.fabric8.kubernetes.api.builder")
 public class CustomToolsStatus {
+
+    private Status state;
+    private String message;
+    private String serviceId;
+    private String artifactId;
+
+    public Status getState() {
+        return state;
+    }
+
+    public void setState(Status state) {
+        this.state = state;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getServiceId() {
+        return serviceId;
+    }
+
+    public void setServiceId(String serviceId) {
+        this.serviceId = serviceId;
+    }
+
+    public String getArtifactId() {
+        return artifactId;
+    }
+
+    public void setArtifactId(String artifactId) {
+        this.artifactId = artifactId;
+    }
 }
