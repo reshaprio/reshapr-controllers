@@ -1,0 +1,43 @@
+apiVersion: reshapr.io/v1alpha1
+kind: Resource
+metadata:
+  name: github-api-resources-01
+  namespace: my-project
+  labels:
+    app: github-api
+  annotations:
+    reshapr.io/instance: reshapr-ctrl.reshapr-system
+    reshapr.io/organization: acme-corp
+spec:
+  service:
+    name: GitHub GraphQL
+    version: '20250917'
+  resources:
+    user:
+      description: A GitHub user with profile information and followers
+      schema:
+        type: object
+        properties:
+          login:
+            type: string
+            description: The GitHub login handle of the user
+          name:
+            type: string
+            description: The display name of the user
+          avatarUrl:
+            type: string
+            description: URL of the user avatar image
+          followers:
+            type: array
+            description: List of users following this user
+            items:
+              type: object
+              properties:
+                login:
+                  type: string
+                avatarUrl:
+                  type: string
+status:
+  state: READY
+  artifactId: 0QDR826ST0CAD
+  serviceId: 0QDR6Y0EY0FNK
