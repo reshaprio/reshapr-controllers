@@ -31,6 +31,7 @@ extend a running reShapr **control plane** with a Kubernetes-native experience:
 | [`GatewayGroup`](./gatewaygroup-cr.md)             | Namespaced | Declare a group of gateway instances identified by labels.                  |
 | [`ConfigurationPlan`](./configurationplan-cr.md)   | Namespaced | Bind a Service to a backend endpoint with credentials (API Key, OAuth2).    |
 | [`Exposition`](./exposition-cr.md)                 | Namespaced | Expose a Service on a GatewayGroup through a specific ConfigurationPlan.    |
+| [`SecretSource`](./secretsource-cr.md)             | Namespaced | Declare Secrets in the control plane, optionally sourced from Kubernetes Secrets. |
 | [`CustomTools`](./customtools-cr.md)               | Namespaced | Attach declarative or scripted custom tools to an existing Service.         |
 
 ### Admission webhook

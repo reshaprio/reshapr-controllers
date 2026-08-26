@@ -18,6 +18,7 @@ kubectl apply -f deploy/crd/gatewaygroups.reshapr.io-v1.yml
 kubectl apply -f deploy/crd/configurationplans.reshapr.io-v1.yml
 kubectl apply -f deploy/crd/customtools.reshapr.io-v1.yml
 kubectl apply -f deploy/crd/expositions.reshapr.io-v1.yml
+kubectl apply -f deploy/crd/secretsources.reshapr.io-v1.yml
 ```
 
 You can verify the installation with:
@@ -28,6 +29,7 @@ configurationplans.reshapr.io   2025-08-25T09:12:03Z
 customtools.reshapr.io          2025-08-25T09:12:03Z
 expositions.reshapr.io          2025-08-25T09:12:03Z
 gatewaygroups.reshapr.io        2025-08-25T09:12:03Z
+secretsources.reshapr.io        2025-08-25T09:12:03Z
 services.reshapr.io             2025-08-25T09:12:03Z
 ```
 
@@ -45,13 +47,70 @@ This creates:
 * The `reshapr-system` namespace,
 * A `ServiceAccount` named `reshapr-operator`,
 * A `Deployment` running the operator container
-  (`quay.io/lbroudoux/reshapr-operator:nightly`).
+  (`quay.io/lbroudoux/reshapr-operator:nightly`),
+* Two `ClusterRole` / `ClusterRoleBinding` pairs granting the required RBAC — see the
+  [RBAC section](#rbac-for-secretsource-secret-reads) below.
 
 Verify that the operator Pod becomes ready:
 
 ```sh
 kubectl -n reshapr-system get pods -l name=reshapr-operator
 ```
+
+### RBAC for SecretSource Secret reads
+
+The operator manifest ships **two separate `ClusterRole` / `ClusterRoleBinding` pairs** rather
+than a single monolithic role, in order to make cluster-wide permissions easier to audit and
+selectively disable:
+
+| ClusterRole                          | ClusterRoleBinding                     | Purpose                                                                                                                                                              |
+|--------------------------------------|----------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `reshapr-operator`                   | `reshapr-operator`                     | Full access to the `reshapr.io` API group — required for the operator to reconcile every reShapr CR.                                                                  |
+| `reshapr-operator-secret-reader`     | `reshapr-operator-secret-reader`       | `get` / `list` / `watch` on core `secrets` — used **only** by the [`SecretSource`](./secretsource-cr.md) reconciler to resolve `spec.secrets[].valuesFrom.secretRef`. |
+
+Splitting the two roles has two practical benefits:
+
+1. **Auditability** — a security review can immediately spot that the operator needs
+   cluster-wide access to Kubernetes `Secrets` and reason about it independently from the rest
+   of the RBAC.
+2. **Scoping or disabling the SecretSource feature** — if you do not intend to use
+   `SecretSource` resources (or want to restrict `Secret` reads to a subset of namespaces),
+   you can safely tune the second binding without impacting the rest of the operator.
+
+Common variants:
+
+* **Disable the `SecretSource` feature entirely** — delete only the secret-reader binding
+  (the operator will still start, but SecretSource reconciliations will end in `ERROR`
+  whenever `valuesFrom` is used):
+
+  ```sh
+  kubectl delete clusterrolebinding reshapr-operator-secret-reader
+  ```
+
+* **Restrict `Secret` reads to specific namespaces** — replace the cluster-wide binding by one
+  or several namespaced `RoleBinding`s referencing the `reshapr-operator-secret-reader`
+  `ClusterRole`:
+
+  ```yaml
+  apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    name: reshapr-operator-secret-reader
+    namespace: my-team
+  subjects:
+    - kind: ServiceAccount
+      name: reshapr-operator
+      namespace: reshapr-system
+  roleRef:
+    kind: ClusterRole
+    name: reshapr-operator-secret-reader
+    apiGroup: rbac.authorization.k8s.io
+  ```
+
+  ```sh
+  kubectl delete clusterrolebinding reshapr-operator-secret-reader
+  kubectl apply -f my-team-secret-reader-binding.yaml
+  ```
 
 ## 3. Prepare the Reshapr Control Plane Connection
 

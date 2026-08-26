@@ -64,6 +64,25 @@ rules:
       - '*'
 
 ---
+# Dedicated ClusterRole for reading Kubernetes Secrets referenced by SecretSource CRs
+# via `spec.secrets[].valuesFrom.secretRef`. Kept separate from the main operator role so
+# that cluster administrators can choose a stricter scope by binding it with a
+# namespaced RoleBinding instead of the cluster-wide ClusterRoleBinding below.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: reshapr-operator-secret-reader
+rules:
+  - apiGroups:
+      - ''
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -75,4 +94,22 @@ subjects:
 roleRef:
   kind: ClusterRole
   name: reshapr-operator
+  apiGroup: ""
+
+---
+# Cluster-wide binding for Secret reads — since the operator watches SecretSource
+# resources in all namespaces, it needs to read Secrets from those namespaces too.
+# To restrict this to specific namespaces, replace this binding with one (or several)
+# namespaced RoleBinding(s) referencing the `reshapr-operator-secret-reader` ClusterRole.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: reshapr-operator-secret-reader
+subjects:
+  - kind: ServiceAccount
+    name: reshapr-operator
+    namespace: reshapr-system
+roleRef:
+  kind: ClusterRole
+  name: reshapr-operator-secret-reader
   apiGroup: ""
