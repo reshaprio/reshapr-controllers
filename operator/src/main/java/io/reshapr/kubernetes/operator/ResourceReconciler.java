@@ -24,6 +24,7 @@ import io.reshapr.kubernetes.operator.auth.ReshaprApiClientFactory;
 import io.reshapr.kubernetes.operator.client.ArtifactAttachClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.javaoperatorsdk.operator.api.config.informer.Informer;
 import io.javaoperatorsdk.operator.api.reconciler.ControllerConfiguration;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -67,7 +68,7 @@ public class ResourceReconciler extends BaseArtifactReconciler<Resource> {
 
    @Override
    protected String getArtifactContent(Resource resource) throws Exception {
-      com.fasterxml.jackson.databind.node.ObjectNode root = objectMapper.createObjectNode();
+      ObjectNode root = objectMapper.createObjectNode();
       root.put("apiVersion", "reshapr.io/v1alpha1");
       root.put("kind", "Resource");
       if (resource.getSpec() != null) {
