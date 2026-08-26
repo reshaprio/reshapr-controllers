@@ -1,0 +1,12 @@
+apiVersion: reshapr.io/v1alpha1
+kind: GatewayGroup
+metadata:
+  name: qa-gateway-group
+  annotations:
+    reshapr.io/instance: reshapr-control-plane-ctrl.reshapr-system
+    reshapr.io/organization: reshapr
+spec:
+  labels:
+    env: qa
+    region: us
+    team: reshapr
