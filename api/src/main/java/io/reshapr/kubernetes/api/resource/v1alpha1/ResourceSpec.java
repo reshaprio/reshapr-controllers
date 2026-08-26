@@ -26,22 +26,28 @@ import java.util.Map;
 
 /**
  * This is the {@code specification} of a {@link Resource} custom resource.
- * It holds a reference to a Service and a map of resource definitions that
- * will be attached as {@code RESHAPR_RESOURCES} artifacts in the control plane.
+ * It holds a reference to a Service and typed maps of resource definitions
+ * (and optional resource templates) that will be attached as
+ * {@code RESHAPR_RESOURCES} artifacts in the control plane.
+ * <p>
+ * At least one of {@code resources} or {@code resourceTemplates} must be present.
  *
  * @author vaishnav
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "service", "resources" })
+@JsonPropertyOrder({ "service", "resources", "resourceTemplates" })
 @Buildable(editableEnabled = false, builderPackage = "io.fabric8.kubernetes.api.builder")
 public class ResourceSpec {
 
     @JsonPropertyDescription("Holds reference information about the Service this resource artifact relates to.")
     private ServiceRef service;
 
-    @JsonPropertyDescription("The resource definitions, keyed by resource name.")
-    private Map<String, Object> resources;
+    @JsonPropertyDescription("The resource definitions, keyed by URI.")
+    private Map<String, ResourceItem> resources;
+
+    @JsonPropertyDescription("The resource template definitions, keyed by URI template.")
+    private Map<String, ResourceTemplateItem> resourceTemplates;
 
     public ServiceRef getService() {
         return service;
@@ -51,11 +57,19 @@ public class ResourceSpec {
         this.service = service;
     }
 
-    public Map<String, Object> getResources() {
+    public Map<String, ResourceItem> getResources() {
         return resources;
     }
 
-    public void setResources(Map<String, Object> resources) {
+    public void setResources(Map<String, ResourceItem> resources) {
         this.resources = resources;
+    }
+
+    public Map<String, ResourceTemplateItem> getResourceTemplates() {
+        return resourceTemplates;
+    }
+
+    public void setResourceTemplates(Map<String, ResourceTemplateItem> resourceTemplates) {
+        this.resourceTemplates = resourceTemplates;
     }
 }

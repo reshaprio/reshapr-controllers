@@ -77,6 +77,9 @@ public class ResourceReconciler extends BaseArtifactReconciler<Resource> {
          if (resource.getSpec().getResources() != null) {
             root.set("resources", objectMapper.valueToTree(resource.getSpec().getResources()));
          }
+         if (resource.getSpec().getResourceTemplates() != null) {
+            root.set("resourceTemplates", objectMapper.valueToTree(resource.getSpec().getResourceTemplates()));
+         }
       }
       return objectMapper.writeValueAsString(root);
    }

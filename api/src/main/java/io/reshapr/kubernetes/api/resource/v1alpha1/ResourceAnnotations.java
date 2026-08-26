@@ -1,0 +1,53 @@
+/*
+ * Copyright The Reshapr Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.reshapr.kubernetes.api.resource.v1alpha1;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import io.sundr.builder.annotations.Buildable;
+
+import java.util.List;
+
+/**
+ * Annotations for a {@link ResourceItem} or {@link ResourceTemplateItem}.
+ * Models {@code definitions/annotations} from {@code Resources-v1alpha1-schema.json}.
+ *
+ * @author vaishnav
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@Buildable(editableEnabled = false, builderPackage = "io.fabric8.kubernetes.api.builder")
+public class ResourceAnnotations {
+
+    @JsonPropertyDescription("The intended audiences for this resource (e.g. 'user', 'assistant').")
+    private List<String> audience;
+
+    @JsonPropertyDescription("The importance of this resource, from 0.0 (least) to 1.0 (most).")
+    private Float priority;
+
+    @JsonPropertyDescription("The last modified date-time of this resource (ISO 8601).")
+    private String lastModified;
+
+    public List<String> getAudience() { return audience; }
+    public void setAudience(List<String> audience) { this.audience = audience; }
+
+    public Float getPriority() { return priority; }
+    public void setPriority(Float priority) { this.priority = priority; }
+
+    public String getLastModified() { return lastModified; }
+    public void setLastModified(String lastModified) { this.lastModified = lastModified; }
+}
