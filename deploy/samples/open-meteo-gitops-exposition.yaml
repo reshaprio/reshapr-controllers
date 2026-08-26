@@ -1,0 +1,13 @@
+apiVersion: reshapr.io/v1alpha1
+kind: Exposition
+metadata:
+  name: open-meteo-gitops-exposition
+  annotations:
+    reshapr.io/instance: reshapr-control-plane-ctrl.reshapr-system
+    reshapr.io/organization: reshapr
+spec:
+  service:
+    name: open-meteo-api
+    version: '1.0'
+  configurationPlan: open-meteo-gitops-configurationplan
+  gatewayGroup: 'Default Gateway Group'

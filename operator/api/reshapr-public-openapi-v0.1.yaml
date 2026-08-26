@@ -87,7 +87,7 @@ paths:
                 $ref: '#/components/schemas/Artifact'
           description: Artifact imported
       security:
-        - jwt-bearer: []
+      - jwt-bearer: []
       operationId: importArtifact
   /v1/artifacts/attach:
     post:
@@ -120,6 +120,43 @@ paths:
       security:
         - jwt-bearer: [ ]
       operationId: getArtifact
+    delete:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactDeletionImpact'
+          description: >-
+            Artifact deleted. The response describes the impact of the deletion on the ConfigurationPlans
+            of the service that referenced the artifact by name in their includedArtifacts selection.
+        "404":
+          description: Artifact with this id is unknown
+      security:
+        - jwt-bearer: [ ]
+      operationId: deleteArtifact
+    parameters:
+      - name: id
+        description: Unique identifier of the Artifact to manage
+        schema:
+          type: string
+        in: path
+        required: true
+  /v1/artifacts/{id}/deletion-impact:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactDeletionImpact'
+          description: >-
+            Non-mutating preview of the impact of deleting the artifact, to back a confirmation prompt.
+        "404":
+          description: Artifact with this id is unknown
+      security:
+        - jwt-bearer: [ ]
+      operationId: getArtifactDeletionImpact
     parameters:
       - name: id
         description: Unique identifier of the Artifact to manage
@@ -150,12 +187,12 @@ paths:
   /v1/configurationPlans:
     get:
       parameters:
-        - name: serviceId
-          description: Service unique identifier
-          schema:
-            type: string
-          in: query
-          required: true
+      - name: serviceId
+        description: Service unique identifier
+        schema:
+          type: string
+        in: query
+        required: true
       responses:
         "200":
           content:
@@ -166,7 +203,7 @@ paths:
                   $ref: '#/components/schemas/ConfigurationPlan'
           description: Get the list of ConfigurationPlan by service identifier
       security:
-        - jwt-bearer: []
+      - jwt-bearer: []
       operationId: getConfigPlans
     post:
       requestBody:
@@ -191,7 +228,7 @@ paths:
           description: "One COnfiguration Plan dependency (service, secret, ...) cannot\
             \ be found"
       security:
-        - jwt-bearer: []
+      - jwt-bearer: []
       operationId: createConfigPlan
   /v1/configurationPlans/{id}:
     get:
@@ -263,16 +300,16 @@ paths:
   /v1/expositions:
     get:
       parameters:
-        - name: serviceId
-          description: Unique identifier of the Service to get Expositions for
-          schema:
-            type: string
-          in: query
-        - name: gatewayGroupId
-          description: 'Identifier of the Gateway Group to get Expositions for '
-          schema:
-            type: string
-          in: query
+      - name: serviceId
+        description: Unique identifier of the Service to get Expositions for
+        schema:
+          type: string
+        in: query
+      - name: gatewayGroupId
+        description: 'Identifier of the Gateway Group to get Expositions for '
+        schema:
+          type: string
+        in: query
       responses:
         "200":
           content:
@@ -284,7 +321,7 @@ paths:
           description: Get the expositions - either all or filtered by Service or
             Gateway Group
       security:
-        - jwt-bearer: []
+      - jwt-bearer: []
       operationId: getExpositions
     post:
       requestBody:
@@ -308,7 +345,7 @@ paths:
           description: One of exposition dependency (Configuration Plan or Gateway
             Group) cannot be found
       security:
-        - jwt-bearer: []
+      - jwt-bearer: []
       operationId: createExposition
   /v1/expositions/{id}:
     get:
@@ -391,7 +428,7 @@ paths:
                   $ref: '#/components/schemas/GatewayGroup'
           description: The available GatewayGroups
       security:
-        - jwt-bearer: []
+      - jwt-bearer: []
       operationId: listGatewayGroups
     post:
       requestBody:
@@ -410,7 +447,7 @@ paths:
         "429":
           description: Quotas of GatewayGroups exceeded
       security:
-        - jwt-bearer: []
+      - jwt-bearer: []
       operationId: createGatewayGroup
   /v1/gatewayGroups/{id}:
     get:
@@ -471,7 +508,7 @@ paths:
                   $ref: '#/components/schemas/Quota'
           description: Get the quotas of the user's organization
       security:
-        - jwt-bearer: []
+      - jwt-bearer: []
       operationId: getQuotas
   /v1/gateways:
     get:
@@ -485,21 +522,21 @@ paths:
                   $ref: '#/components/schemas/GatewayView'
           description: The gateways currently active in the user's organization
       security:
-        - jwt-bearer: []
+      - jwt-bearer: []
       operationId: listGateways
   /v1/secrets:
     get:
       parameters:
-        - name: page
-          description: The number of the page to fetch (default is 0)
-          schema:
-            type: integer
-          in: query
-        - name: size
-          description: The number of secrets in a page to fetch (default is 20)
-          schema:
-            type: integer
-          in: query
+      - name: page
+        description: The number of the page to fetch (default is 0)
+        schema:
+          type: integer
+        in: query
+      - name: size
+        description: The number of secrets in a page to fetch (default is 20)
+        schema:
+          type: integer
+        in: query
       responses:
         "200":
           content:
@@ -510,7 +547,7 @@ paths:
                   $ref: '#/components/schemas/Secret'
           description: Get the user's organization secrets
       security:
-        - jwt-bearer: []
+      - jwt-bearer: []
       operationId: getSecrets
     post:
       requestBody:
@@ -530,21 +567,21 @@ paths:
         "409":
           description: Secret with this name already exists in the organization
       security:
-        - jwt-bearer: []
+      - jwt-bearer: []
       operationId: createSecret
   /v1/services:
     get:
       parameters:
-        - name: page
-          description: Number of page to fetch (default to 0)
-          schema:
-            type: number
-          in: query
-        - name: size
-          description: Size of the page to fetch (default to 20)
-          schema:
-            type: number
-          in: query
+      - name: page
+        description: Number of page to fetch (default to 0)
+        schema:
+          type: number
+        in: query
+      - name: size
+        description: Size of the page to fetch (default to 20)
+        schema:
+          type: number
+        in: query
       responses:
         "200":
           content:
@@ -555,7 +592,7 @@ paths:
                   $ref: '#/components/schemas/Service'
           description: The list of fetched Services
       security:
-        - jwt-bearer: []
+      - jwt-bearer: []
       operationId: getServices
   /v1/services/{id}:
     get:
@@ -569,7 +606,7 @@ paths:
         "404":
           description: Service with id is unknown
       security:
-        - jwt-bearer: []
+      - jwt-bearer: []
       operationId: getServiceView
     delete:
       responses:
@@ -578,15 +615,15 @@ paths:
         "404":
           description: Service is unknown
       security:
-        - jwt-bearer: []
+      - jwt-bearer: []
       operationId: deleteService
     parameters:
-      - name: id
-        description: The Service unique identifier
-        schema:
-          type: string
-        in: path
-        required: true
+    - name: id
+      description: The Service unique identifier
+      schema:
+        type: string
+      in: path
+      required: true
   /v1/secrets/{id}:
     get:
       responses:
@@ -612,7 +649,7 @@ paths:
                 $ref: '#/components/schemas/Secret'
           description: The updated secret
       security:
-        - jwt-bearer: []
+      - jwt-bearer: []
       operationId: updateSecret
     delete:
       responses:
@@ -621,15 +658,15 @@ paths:
         "404":
           description: Secret with this id is unknown
       security:
-        - jwt-bearer: []
+      - jwt-bearer: []
       operationId: deleteSecret
     parameters:
-      - name: id
-        description: The unique identifier of the Secret to manage
-        schema:
-          type: string
-        in: path
-        required: true
+    - name: id
+      description: The unique identifier of the Secret to manage
+      schema:
+        type: string
+      in: path
+      required: true
   /v1/tokens/apiTokens:
     get:
       responses:
@@ -642,7 +679,7 @@ paths:
                   $ref: '#/components/schemas/ApiToken'
           description: The list of ApiTokens for this organization
       security:
-        - jwt-bearer: []
+      - jwt-bearer: []
       operationId: getApiTokens
     post:
       requestBody:
@@ -657,9 +694,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiToken'
-          description: The newmy created ApiToken
+          description: The newmly created ApiToken
       security:
-        - jwt-bearer: []
+      - jwt-bearer: []
       operationId: createApiToken
   /v1/tokens/apiTokens/{id}:
     delete:
@@ -672,12 +709,12 @@ paths:
       security:
         - jwt-bearer: []
     parameters:
-      - name: id
-        description: The unique identifier of ApiToken to manage
-        schema:
-          type: string
-        in: path
-        required: true
+    - name: id
+      description: The unique identifier of ApiToken to manage
+      schema:
+        type: string
+      in: path
+      required: true
   /v1/user/profile:
     get:
       operationId: getUserProfile
@@ -713,18 +750,107 @@ paths:
           description: User with this name is unknown
       security:
         - jwt-bearer: []
+  /v1/organizations/{organizationName}/members:
+    get:
+      operationId: getOrganizationMembers
+      summary: Get the members of an organization
+      description: Returns the list of members belonging to the specified organization. Only the organization owner is allowed to view members.
+      parameters:
+        - name: organizationName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The name of the organization
+      responses:
+        "200":
+          description: The list of organization members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Member'
+        "403":
+          description: Only the owner can view members
+        "404":
+          description: Organization not found
+      security:
+        - jwt-bearer: []
+    post:
+      operationId: addOrganizationMember
+      summary: Add a member to an organization
+      description: Adds a user (identified by email) as a member of the specified organization. Only the organization owner is allowed to add members.
+      parameters:
+        - name: organizationName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The name of the organization
+      requestBody:
+        description: The member to add
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberRequest'
+        required: true
+      responses:
+        "200":
+          description: User added as a member
+          content:
+            application/json:
+              schema:
+                type: string
+        "400":
+          description: The email address does not match any existing user account
+        "403":
+          description: Only the owner can add members
+        "404":
+          description: Organization not found
+      security:
+        - jwt-bearer: []
+  /v1/organizations/{organizationName}/members/{email}:
+    delete:
+      operationId: removeOrganizationMember
+      summary: Remove a member from an organization
+      description: Removes a user (identified by email) from the specified organization. Only the organization owner is allowed to remove members. The owner cannot be removed.
+      parameters:
+        - name: organizationName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The name of the organization
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The email of the member to remove
+      responses:
+        "204":
+          description: Member successfully removed
+        "400":
+          description: Cannot remove the owner of the organization
+        "403":
+          description: Only the owner can remove members
+        "404":
+          description: Organization or user not found
+      security:
+        - jwt-bearer: []
 components:
   schemas:
     Artifact:
       description: An Artifact in Micepe control plane
       required:
-        - id
-        - organizationId
-        - name
-        - content
-        - mainArtifact
-        - type
-        - sourceArtifact
+      - id
+      - organizationId
+      - name
+      - content
+      - mainArtifact
+      - type
+      - sourceArtifact
       type: object
       properties:
         id:
@@ -751,28 +877,79 @@ components:
         sourceArtifact:
           description: Name or URL of original artifact file
           type: string
+        capabilities:
+          description: >-
+            Names of the capabilities declared by a custom artifact (prompt names, resource/
+            resourceTemplate uris, custom tool names or filters).
+          type: array
+          items:
+            type: string
+    ArtifactDeletionImpact:
+      description: >-
+        Impact of deleting an artifact on the ConfigurationPlans of its service. Returned as a preview by
+        GET /v1/artifacts/{id}/deletion-impact and as the applied result by DELETE /v1/artifacts/{id}.
+      required:
+        - artifactId
+        - artifactName
+        - mainArtifact
+        - impactedPlans
+      type: object
+      properties:
+        artifactId:
+          description: Identifier of the artifact
+          type: string
+        artifactName:
+          description: Name of the artifact
+          type: string
+        mainArtifact:
+          description: Whether the artifact is the service main artifact
+          type: boolean
+        impactedPlans:
+          description: ConfigurationPlans referencing the artifact by name in their includedArtifacts
+          type: array
+          items:
+            $ref: '#/components/schemas/ImpactedConfigurationPlan'
+    ImpactedConfigurationPlan:
+      description: A ConfigurationPlan impacted by an artifact deletion
+      required:
+        - id
+        - name
+        - fallsBackToAll
+      type: object
+      properties:
+        id:
+          description: Identifier of the ConfigurationPlan
+          type: string
+        name:
+          description: Name of the ConfigurationPlan
+          type: string
+        fallsBackToAll:
+          description: >-
+            Whether removing the artifact empties the plan selection, making it fall back to all attached
+            artifacts of the service
+          type: boolean
     ArtifactType:
       description: The supported type of Artifact
       enum:
-        - JSON_SCHEMA
-        - OPEN_API_SPEC
-        - GRAPHQL_SCHEMA
-        - PROTOBUF_SCHEMA
-        - PROTOBUF_DESCRIPTOR
-        - JSON_FRAGMENT
-        - RESHAPR_PROMPTS
-        - RESHAPR_CUSTOM_TOOLS
-        - RESHAPR_RESOURCES
+      - JSON_SCHEMA
+      - OPEN_API_SPEC
+      - GRAPHQL_SCHEMA
+      - PROTOBUF_SCHEMA
+      - PROTOBUF_DESCRIPTOR
+      - JSON_FRAGMENT
+      - RESHAPR_PROMPTS
+      - RESHAPR_CUSTOM_TOOLS
+      - RESHAPR_RESOURCES
       type: string
     ArtifactReference:
       description: Basic information about an Artifact in reShapr control plane
       required:
-        - id
-        - organizationId
-        - name
-        - mainArtifact
-        - type
-        - sourceArtifact
+      - id
+      - organizationId
+      - name
+      - mainArtifact
+      - type
+      - sourceArtifact
       type: object
       properties:
         id:
@@ -796,11 +973,18 @@ components:
         sourceArtifact:
           description: Name or URL of original artifact file
           type: string
+        capabilities:
+          description: >-
+            Names of the capabilities declared by a custom artifact (prompt names, resource/
+            resourceTemplate uris, custom tool names or filtereds).
+          type: array
+          items:
+            type: string
     ConfigurationPlanSummary:
       description: The summary of a ConfigurationPlan in reShapr control plane
       required:
-        - id
-        - backendEndpoint
+      - id
+      - backendEndpoint
       type: object
       properties:
         id:
@@ -815,41 +999,141 @@ components:
     SecretType:
       description: The types of Secret available in Micepe
       enum:
-        - ARTIFACT
-        - ENDPOINT
+      - ARTIFACT
+      - ENDPOINT
       type: string
     ServiceView:
-      description: An aggregated view no Service and related elements in Micepe
+      description: An aggregated view no Service and related elements in reShapr
+      required:
+      - id
+      - organizationId
+      - name
+      - version
+      - createdOn
+      - type
       type: object
+      properties:
+        id:
+          description: Service unique identifier
+          type: string
+        organizationId:
+          description: Identifier of the owning organization
+          type: string
+        name:
+          description: Service name
+          type: string
+        version:
+          description: Service version
+          type: string
+        createdOn:
+          format: date-time
+          description: Creation date in control plane
+          type: string
+        type:
+          $ref: '#/components/schemas/ServiceType'
+          description: Service type
+        operations:
+          description: The list of operations exposed by this service
+          type: array
+          items:
+            $ref: '#/components/schemas/Operation'
     ServiceSummary:
-      description: Basic information of a Service in reShapr control plance
+      description: Basic information of a Service in reShapr control plane
+      required:
+      - id
+      - name
+      - version
+      - type
       type: object
+      properties:
+        id:
+          description: Service unique identifier
+          type: string
+        name:
+          description: Service name
+          type: string
+        version:
+          description: Service version
+          type: string
+        type:
+          $ref: '#/components/schemas/ServiceType'
+          description: Service type
     ServiceType:
       description: The available types of Service in reShapr
       enum:
-        - REST
-        - GRAPHQL
-        - GRPC
+      - REST
+      - GRAPHQL
+      - GRPC
       type: string
     ValidityPeriod:
       description: 'The available duration that representation a validity period in
         Micepe '
       enum:
-        - "1"
-        - "7"
-        - "30"
-        - "90"
+      - "1"
+      - "7"
+      - "30"
+      - "90"
       type: string
     Exposition:
       description: An Exposition in reShapr control plane
+      required:
+      - id
+      - organizationId
       type: object
+      properties:
+        id:
+          description: Unique identifier of the Exposition
+          type: string
+        organizationId:
+          description: Unique identifier of the organization owning the Exposition
+          type: string
+        name:
+          description: Optional organization-unique name of the Exposition (absent when unnamed)
+          type: string
+        createdOn:
+          format: date-time
+          description: Creation date in control plane
+          type: string
+        gatewayGroup:
+          $ref: '#/components/schemas/GatewayGroup'
+          description: The gateway group the service is exposed on
+        configurationPlan:
+          $ref: '#/components/schemas/ConfigurationPlan'
+          description: The configuration plan used for this exposition
+        service:
+          $ref: '#/components/schemas/Service'
+          description: The service being exposed
     ExpositionReference:
       description: A reference to an Exposition in reShapr control plane
+      required:
+      - id
+      - organizationId
       type: object
+      properties:
+        id:
+          description: Unique identifier of the Exposition
+          type: string
+        organizationId:
+          description: Unique identifier of the organization owning the Exposition
+          type: string
+        name:
+          description: Optional organization-unique name of the Exposition. When omitted at creation,
+            the Exposition is created unnamed (a default slug may be proposed by the CLI/Web UI).
+          type: string
+        createdOn:
+          format: date-time
+          description: Creation date in control plane
+          type: string
+        gatewayGroupId:
+          description: Identifier of the gateway group the service is exposed on
+          type: string
+        configurationPlanId:
+          description: Identifier of the configuration plan used for this exposition
+          type: string
     Operation:
       description: A Service Operation in reShapr control plane
       required:
-        - name
+      - name
       type: object
       properties:
         name:
@@ -870,12 +1154,12 @@ components:
     Service:
       description: A Service in Micepe control plane
       required:
-        - id
-        - organizationId
-        - name
-        - version
-        - createdOn
-        - type
+      - id
+      - organizationId
+      - name
+      - version
+      - createdOn
+      - type
       type: object
       properties:
         id:
@@ -900,11 +1184,11 @@ components:
     ConfigurationPlan:
       description: A ConfigurationPlan in Micepe control plane
       required:
-        - id
-        - organizationId
-        - backendEndpoint
-        - name
-        - serviceId
+      - id
+      - organizationId
+      - backendEndpoint
+      - name
+      - serviceId
       type: object
       properties:
         id:
@@ -932,6 +1216,12 @@ components:
           type: array
           items:
             type: string
+        includedArtifacts:
+          description: List of selected attached artifact names. Empty (or absent) means all the
+            attached artifacts of the service apply. The service main artifact is never impacted.
+          type: array
+          items:
+            type: string
         backendSecretId:
           description: Identifier of Backend Secret to use if any
           type: string
@@ -952,11 +1242,11 @@ components:
       description: An Exposition that is currently active. ie. exposed by at least
         one Gateway
       required:
-        - service
-        - configurationPlan
-        - gateways
-        - id
-        - organizationId
+      - service
+      - configurationPlan
+      - gateways
+      - id
+      - organizationId
       type: object
       properties:
         service:
@@ -976,11 +1266,18 @@ components:
         organizationId:
           description: Unique identifier of the organization of the Exposition
           type: string
+        name:
+          description: Optional organization-unique name of the Exposition (absent when unnamed)
+          type: string
+        createdOn:
+          format: date-time
+          description: Creation date in control plane
+          type: string
     ConfigurationPlanView:
       description: Minimal representation of a Configuration Plan
       required:
-        - id
-        - backendEndpoint
+      - id
+      - backendEndpoint
       type: object
       properties:
         id:
@@ -992,9 +1289,9 @@ components:
     Gateway:
       description: Minimalist representation of a Gateway
       required:
-        - id
-        - name
-        - fqdns
+      - id
+      - name
+      - fqdns
       type: object
       properties:
         id:
@@ -1011,12 +1308,12 @@ components:
     Quota:
       description: A Quota in control plance
       required:
-        - id
-        - organizationId
-        - metric
-        - enabled
-        - limit
-        - remaining
+      - id
+      - organizationId
+      - metric
+      - enabled
+      - limit
+      - remaining
       type: object
       properties:
         id:
@@ -1042,9 +1339,9 @@ components:
     Secret:
       description: A Secret in the control plane
       required:
-        - organizationId
-        - name
-        - type
+      - organizationId
+      - name
+      - type
       type: object
       properties:
         id:
@@ -1085,9 +1382,9 @@ components:
     OAuth2ClientConfiguration:
       description: The configuration of an OAuth2 client
       required:
-        - clientId
-        - authorizationEndpoint
-        - tokenEndpoint
+      - clientId
+      - authorizationEndpoint
+      - tokenEndpoint
       type: object
       properties:
         clientId:
@@ -1105,9 +1402,9 @@ components:
     GatewayGroup:
       description: A GatewayGroup in Reshapr control plane
       required:
-        - id
-        - organizationId
-        - name
+      - id
+      - organizationId
+      - name
       type: object
       properties:
         id:
@@ -1127,8 +1424,8 @@ components:
     GatewayView:
       description: A gateway currently active and reporting health to the Reshapr control plane
       required:
-        - id
-        - name
+      - id
+      - name
       type: object
       properties:
         id:
@@ -1168,11 +1465,11 @@ components:
     ApiToken:
       description: An API token for the Reshapr control plane
       required:
-        - id
-        - organizationId
-        - name
-        - username
-        - validUntil
+      - id
+      - organizationId
+      - name
+      - username
+      - validUntil
       type: object
       properties:
         id:
@@ -1197,8 +1494,8 @@ components:
     ApiTokenRequest:
       description: ""
       required:
-        - name
-        - validityDays
+      - name
+      - validityDays
       type: object
       properties:
         name:
@@ -1207,10 +1504,10 @@ components:
         validityDays:
           description: THe number of days this token will be valid from today
           enum:
-            - "1"
-            - "7"
-            - "30"
-            - "90"
+          - "1"
+          - "7"
+          - "30"
+          - "90"
           type: string
     UserProfile:
       type: object
@@ -1242,6 +1539,36 @@ components:
         icon:
           type: string
           description: The icon of the organization
+    Member:
+      description: A member of an organization
+      type: object
+      required:
+        - username
+        - email
+      properties:
+        username:
+          type: string
+          description: The username of the member
+        email:
+          type: string
+          format: email
+          description: The email address of the member
+        firstname:
+          type: string
+          description: The first name of the member
+        lastname:
+          type: string
+          description: The last name of the member
+    MemberRequest:
+      description: Request payload for adding a member to an organization
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: The email address of the user to add as a member
   securitySchemes:
     jwt-bearer:
       scheme: bearer

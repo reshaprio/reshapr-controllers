@@ -1,0 +1,12 @@
+apiVersion: reshapr.io/v1alpha1
+kind: ConfigurationPlan
+metadata:
+  name: open-meteo-gitops-configurationplan
+  annotations:
+    reshapr.io/instance: reshapr-control-plane-ctrl.reshapr-system
+    reshapr.io/organization: reshapr
+spec:
+  service:
+    name: open-meteo-api
+    version: '1.0'
+  backendEndpoint: https://api.open-meteo.com
