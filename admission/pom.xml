@@ -16,7 +16,7 @@
     <maven.compiler.target>25</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <javaoperatorsdk-webhooks.version>3.0.2</javaoperatorsdk-webhooks.version>
+    <javaoperatorsdk-webhooks.version>3.0.4</javaoperatorsdk-webhooks.version>
     <quarkus-cert-manager.version>1.0.3</quarkus-cert-manager.version>
   </properties>
 
