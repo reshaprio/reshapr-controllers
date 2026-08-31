@@ -1,0 +1,17 @@
+apiVersion: reshapr.io/v1alpha1
+kind: Resource
+metadata:
+  name: open-meteo-gitops-resource
+  annotations:
+    reshapr.io/instance: reshapr-control-plane-ctrl.reshapr-system
+    reshapr.io/organization: reshapr
+spec:
+  service:
+    name: open-meteo-api
+    version: '1.0'
+  resourceTemplates:
+    "file:///forecast/{latitude}/{longitude}":
+      name: forecast
+      title: Weather Forecast
+      description: Weather forecast data for a specific location
+      mimeType: application/json
