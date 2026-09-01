@@ -1,0 +1,48 @@
+apiVersion: reshapr.io/v1alpha1
+kind: Service
+metadata:
+  name: apipastries
+  annotations:
+    reshapr.io/instance: reshapr-control-plane-ctrl.reshapr-system
+    reshapr.io/organization: pastries
+spec:
+  url: https://raw.githubusercontent.com/reshaprio/reshapr-controllers/refs/heads/main/deploy/samples/admission/apipastries-openapi.yaml
+---
+apiVersion: reshapr.io/v1alpha1
+kind: ConfigurationPlan
+metadata:
+  name: apipastries-gitops-configurationplan
+  annotations:
+    reshapr.io/instance: reshapr-control-plane-ctrl.reshapr-system
+    reshapr.io/organization: pastries
+spec:
+  service:
+    name: apipastries
+    version: '0.0.1'
+  backendEndpoint: http://localhost:3003d
+---
+apiVersion: reshapr.io/v1alpha1
+kind: GatewayGroup
+metadata:
+  name: apipastries-dev-group
+  annotations:
+    reshapr.io/instance: reshapr-control-plane-ctrl.reshapr-system
+    reshapr.io/organization: pastries
+spec:
+  labels:
+    env: dev
+    team: pastries
+---
+apiVersion: reshapr.io/v1alpha1
+kind: Exposition
+metadata:
+  name: apipastries-gitops-exposition
+  annotations:
+    reshapr.io/instance: reshapr-control-plane-ctrl.reshapr-system
+    reshapr.io/organization: pastries
+spec:
+  service:
+    name: apipastries
+    version: '0.0.1'
+  configurationPlan: apipastries-gitops-configurationplan
+  gatewayGroup: 'apipastries-dev-group'

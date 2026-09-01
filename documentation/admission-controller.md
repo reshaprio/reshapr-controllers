@@ -102,7 +102,85 @@ The webhook is implemented on top of the
 and its `Mutator<Pod>` API. Adding a new mutation is a matter of wiring an additional `Mutator`
 implementation into `AdmissionControllers`.
 
+## Proxy sidecar injection
+
+When a Pod carries the `io.reshapr/inject: "true"` annotation, the `PodMutator` injects a
+`reshapr-proxy` sidecar container (HTTP `7777`, JGroups `7778`/`57778`) and labels the Pod with
+`reshapr.io/proxy-injected: true`.
+
+### Gateway identity
+
+`RESHAPR_GATEWAY_ID` must be unique per Pod. Because `metadata.name` is not yet assigned during
+admission for Pods created with `generateName`, the webhook injects `POD_NAME` via the Downward API
+and sets `RESHAPR_GATEWAY_ID` to `$(POD_NAME)` (or `<prefix>-$(POD_NAME)` when the
+`io.reshapr/gateway-id-prefix` annotation is set), which Kubernetes expands at runtime.
+
+### Configuration resolution
+
+Values that cannot be computed from the Pod are resolved with the following precedence:
+
+1. an explicit **annotation** on the Pod (propagated from the Deployment pod template);
+2. a **namespace-local Secret** — `reshapr-proxy-config` by default, overridable with the
+   `io.reshapr/config-secret-name` annotation. This Secret must be pre-deployed in the Pod's
+   namespace.
+
+Sensitive values (`RESHAPR_CTRL_TOKEN`, `RESHAPR_CLUSTER_STORE_PASSWORD`,
+`RESHAPR_CLUSTER_KEY_PASSWORD`) are **always** sourced from the Secret through `secretKeyRef`
+references, so they never appear in clear text in the Pod spec.
+
+| Env var                          | Annotation                              | Secret key                  | Source when annotation absent |
+|----------------------------------|-----------------------------------------|-----------------------------|-------------------------------|
+| `RESHAPR_GATEWAY_ID`             | `io.reshapr/gateway-id-prefix`          | —                           | `$(POD_NAME)`                 |
+| `RESHAPR_GATEWAY_FQDNS`          | `io.reshapr/gateway-fqdns`              | `gateway-fqdns`             | optional `secretKeyRef`       |
+| `RESHAPR_GATEWAY_LABELS`         | `io.reshapr/gateway-labels`             | `gateway-labels`            | optional `secretKeyRef`       |
+| `RESHAPR_CTRL_HOST`              | `io.reshapr/control-plane-host`         | `control-plane-host`        | optional `secretKeyRef`       |
+| `RESHAPR_CTRL_PORT`              | `io.reshapr/control-plane-port`         | `control-plane-port`        | optional `secretKeyRef`       |
+| `RESHAPR_CTRL_TLS_PLAINTEXT`     | `io.reshapr/control-plane-tls-plaintext`| `control-plane-tls-plaintext` | optional `secretKeyRef`     |
+| `RESHAPR_CTRL_TOKEN`             | —                                       | `control-plane-token`       | required `secretKeyRef`       |
+| `RESHAPR_CLUSTER_STORE_PASSWORD` | —                                       | `cluster-store-password`    | required `secretKeyRef`       |
+| `RESHAPR_CLUSTER_KEY_PASSWORD`   | —                                       | `cluster-key-password`      | required `secretKeyRef`       |
+
+The sidecar image can be overridden with the `io.reshapr/proxy-image` annotation.
+
+Example configuration Secret:
+
+```sh
+kubectl -n <namespace> create secret generic reshapr-proxy-config \
+  --from-literal=control-plane-host=reshapr-control-plane-ctrl.reshapr-system \
+  --from-literal=control-plane-port=5555 \
+  --from-literal=control-plane-token=<gateway-token> \
+  --from-literal=gateway-labels='env=prod;team=reshapr' \
+  --from-literal=cluster-store-password=<store-password> \
+  --from-literal=cluster-key-password=<key-password> \
+  --from-file=reshapr-cluster.jceks=./reshapr-cluster.jceks
+```
+
+### Services provisioned by the `DeploymentProxyReconciler`
+
+The mutating webhook is declared `sideEffects: None`, so it cannot create Services itself. The
+`DeploymentProxyReconciler` — bundled in the admission controller — watches Deployments whose **pod
+template** carries the `io.reshapr/inject: "true"` annotation (the same single source of truth the
+webhook reads on the resulting Pods) and provisions two Services, both owned by the Deployment
+(garbage-collected with it) and selecting Pods labelled `reshapr.io/proxy-injected: true`:
+
+| Service                          | Type      | Ports         | Purpose                                                        |
+|----------------------------------|-----------|---------------|----------------------------------------------------------------|
+| `reshapr-proxy-<deployment>`     | headless  | `7778`,`57778`| JGroups DNS_PING cluster discovery (Infinispan SYM_ENCRYPT)    |
+| `reshapr-proxy-<deployment>-mcp` | ClusterIP | `7777`        | Load-balanced MCP endpoint — point your Ingress/Gateway here   |
+
+The MCP Service is **opt-in enabled by default**; disable it with `io.reshapr/expose-mcp: "false"`
+on the pod template (e.g. when the MCP endpoint is fronted by an external mesh/gateway). Two separate
+Services are used on purpose: the discovery Service must be headless so every Pod IP is individually
+resolvable for DNS_PING, whereas MCP client traffic wants a load-balanced ClusterIP. The
+`reshapr-cluster.jceks` keystore is mounted from the configuration Secret at `/etc/reshapr/keystore`.
+
+Because this reconciler watches Deployments and manages Services cluster-wide, the admission
+controller's ServiceAccount is bound to a dedicated `ClusterRole` (see
+[`admission/k8s/admission-controller.yaml`](../admission/k8s/admission-controller.yaml)) granting
+`get`/`list`/`watch` on `deployments` and `get`/`list`/`watch`/`create`/`delete` on `services`.
+
 ## Operations
+
 
 ### Verify the webhook is running
 

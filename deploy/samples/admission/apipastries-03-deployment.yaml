@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apipastries-app-03
+  labels:
+    app: apipastries-app-03
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apipastries-app-03
+  template:
+    metadata:
+      labels:
+        app: apipastries-app-03
+      annotations:
+        io.reshapr/inject: "true"
+        # Readable, unique gateway id: apipastries-<pod-name> (optional, defaults to <pod-name>)
+        io.reshapr/gateway-id-prefix: "pre"
+        # Advertised MCP endpoint (not present in the reshapr-proxy-config Secret)
+        io.reshapr/gateway-fqdns: "mcp.apipastries.acme.loc"
+    spec:
+      containers:
+        - name: apipastries-app-03
+          image: quay.io/microcks/contract-testing-demo:03
+          ports:
+            - name: http
+              containerPort: 3003
+              protocol: TCP
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: apipastries-app-03
+  labels:
+    app: apipastries-app-03
+spec:
+  selector:
+    app: apipastries-app-03
+  ports:
+    - name: http
+      protocol: TCP
+      port: 3003
+      targetPort: 3003
+  type: ClusterIP
+  sessionAffinity: None
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: apipastries-app-03
+  labels:
+    app: apipastries-app-03
+spec:
+  rules:
+    - host: apipastries-app-03.acme.loc
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: apipastries-app-03
+                port:
+                  number: 3003
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: apipastries-mcp
+  labels:
+    app: apipastries-mcp
+spec:
+  rules:
+    - host: mcp.apipastries.acme.loc
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                # ClusterIP Service auto-created by the DeploymentProxyReconciler
+                # (opt-in enabled by default, disable with io.reshapr/expose-mcp: "false").
+                name: reshapr-proxy-apipastries-app-03-mcp
+                port:
+                  number: 7777
+
+  
