@@ -1,0 +1,9 @@
+apiVersion: reshapr.io/v1alpha1
+kind: Service
+metadata:
+  name: apipastries
+  annotations:
+    reshapr.io/instance: reshapr-control-plane-ctrl.reshapr-system
+    reshapr.io/organization: reshapr
+spec:
+  url: https://raw.githubusercontent.com/reshaprio/reshapr-controllers/refs/heads/main/deploy/samples/admission/apipastries-service.yaml
