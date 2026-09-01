@@ -4,6 +4,6 @@ metadata:
   name: apipastries
   annotations:
     reshapr.io/instance: reshapr-control-plane-ctrl.reshapr-system
-    reshapr.io/organization: reshapr
+    reshapr.io/organization: pastries
 spec:
-  url: https://raw.githubusercontent.com/reshaprio/reshapr-controllers/refs/heads/main/deploy/samples/admission/apipastries-service.yaml
+  url: https://raw.githubusercontent.com/reshaprio/reshapr-controllers/refs/heads/main/deploy/samples/admission/apipastries-openapi.yaml
