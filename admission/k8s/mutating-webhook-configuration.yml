@@ -1,0 +1,36 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: mutating.reshapr.io
+  annotations:
+    cert-manager.io/inject-ca-from: reshapr-system/reshapr-admission-controller
+webhooks:
+  - name: mutating.reshapr.io
+    rules:
+      - apiGroups:   [""]
+        apiVersions: ["v1"]
+        operations:  ["CREATE"]
+        resources:   ["pods"]
+        scope:       "Namespaced"
+    # Never intercept pods in system namespaces — this prevents a self-deadlock where the
+    # webhook cannot be (re)deployed because the API server calls it while it is down.
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values:
+            - reshapr-system
+            - kube-system
+            - kube-node-lease
+            - kube-public
+    clientConfig:
+      service:
+        namespace: reshapr-system
+        name: reshapr-admission-controller
+        path: "/mutate"
+        port: 443
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    # Fail open: if the webhook is unreachable, admit pods un-injected instead of blocking the cluster.
+    failurePolicy: Ignore
+    timeoutSeconds: 5

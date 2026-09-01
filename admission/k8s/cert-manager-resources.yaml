@@ -1,0 +1,50 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: reshapr-admission-controller-tls-pass
+data:
+  password: c3VwZXJzZWNyZXQ=
+type: Opaque
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: reshapr-admission-controller-issuer
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: reshapr-admission-controller
+spec:
+  dnsNames:
+    - reshapr-admission-controller.reshapr-system.svc.cluster.local
+    - reshapr-admission-controller.reshapr-system.svc
+    - reshapr-admission-controller
+    - localhost
+  duration: 7776000000000000ns
+  encodeUsagesInRequest: false
+  isCA: false
+  issuerRef:
+    name: reshapr-admission-controller-issuer
+  keystores:
+    pkcs12:
+      create: true
+      passwordSecretRef:
+        key: password
+        name: reshapr-admission-controller-tls-pass
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS8
+    size: 2048
+  renewBefore: 1296000000000000ns
+  secretName: reshapr-admission-controller-tls-secret
+  subject:
+    organizations:
+      - Reshapr
+      - Community
+  usages:
+    - server auth
+    - client auth

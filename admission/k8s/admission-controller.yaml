@@ -1,0 +1,110 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/name: reshapr-admission-controller
+  name: reshapr-admission-controller
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: reshapr-admission-controller
+  name: reshapr-admission-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: reshapr-admission-controller
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: reshapr-admission-controller
+    spec:
+      containers:
+        - name: reshapr-admission-controller
+          image: quay.io/lbroudoux/reshapr-admission-controller:nightly
+          imagePullPolicy: Always
+          env:
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: QUARKUS_HTTP_SSL_CERTIFICATE_KEY_STORE_FILE
+              value: /etc/certs/keystore.p12
+            - name: QUARKUS_HTTP_SSL_CERTIFICATE_KEY_STORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: reshapr-admission-controller-tls-pass
+            - name: QUARKUS_HTTP_SSL_CERTIFICATE_KEY_STORE_FILE_TYPE
+              value: PKCS12
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+            - containerPort: 443
+              name: https
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /etc/certs
+              name: admission
+              readOnly: true
+      serviceAccountName: reshapr-admission-controller
+      volumes:
+        - name: admission
+          secret:
+            optional: false
+            secretName: reshapr-admission-controller-tls-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: reshapr-admission-controller
+  name: reshapr-admission-controller
+spec:
+  selector:
+    app.kubernetes.io/name: reshapr-admission-controller
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 443
+  type: ClusterIP
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: reshapr-admission-controller
+  name: reshapr-admission-controller
+rules:
+  # Watch Deployments carrying the io.reshapr/inject annotation.
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch"]
+  # Manage the per-Deployment headless Service used for JGroups DNS_PING discovery.
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/name: reshapr-admission-controller
+  name: reshapr-admission-controller
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: reshapr-admission-controller
+subjects:
+  - kind: ServiceAccount
+    name: reshapr-admission-controller
+    namespace: reshapr-system
+---

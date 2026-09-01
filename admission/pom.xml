@@ -17,6 +17,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <javaoperatorsdk-webhooks.version>3.0.4</javaoperatorsdk-webhooks.version>
+    <java-operator-sdk.version>5.3.5</java-operator-sdk.version>
+    <quarkus.operator-sdk.version>7.7.4</quarkus.operator-sdk.version>
     <quarkus-cert-manager.version>1.0.3</quarkus-cert-manager.version>
   </properties>
 
@@ -25,6 +27,16 @@
       <groupId>io.javaoperatorsdk</groupId>
       <artifactId>kubernetes-webhooks-framework-core</artifactId>
       <version>${javaoperatorsdk-webhooks.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.javaoperatorsdk</groupId>
+      <artifactId>operator-framework-core</artifactId>
+      <version>${java-operator-sdk.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkiverse.operatorsdk</groupId>
+      <artifactId>quarkus-operator-sdk</artifactId>
+      <version>${quarkus.operator-sdk.version}</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -54,6 +66,16 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-minikube</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-junit5</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>kubernetes-server-mock</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 

@@ -21,7 +21,9 @@ updates:
       default-days: 7
 
   - package-ecosystem: docker
-    directory: /
+    directories:
+      - admission/src/main/docker
+      - operator/src/main/docker
     schedule:
       interval: weekly
       day: sunday
