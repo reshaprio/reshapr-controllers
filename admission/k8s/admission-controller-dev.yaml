@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: reshapr-admission-controller
-          image: registry.reshapr.io/reshapr/reshapr-admission:nightly
+          image: quay.io/lbroudoux/reshapr-admission-controller:nightly
           imagePullPolicy: Always
           env:
             - name: KUBERNETES_NAMESPACE

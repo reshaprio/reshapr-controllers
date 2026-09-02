@@ -29,7 +29,7 @@ spec:
       serviceAccountName: reshapr-operator
       containers:
         - name: reshapr-operator
-          image: registry.reshapr.io/reshapr/reshapr-operator:nightly
+          image: quay.io/lbroudoux/reshapr-operator:nightly
           imagePullPolicy: Always
           env:
             - name: POD_NAME
