@@ -56,14 +56,6 @@ jobs:
       - name: Stage release artifacts
         run: mvn -B -Prelease clean deploy -DaltDeploymentRepository=local::default::file://`pwd`/target/staging-deploy
 
-      - name: Publish package with NPM
-        if: ${{ github.event.inputs.deployNPMActive == 'ALWAYS' }}
-        run: |
-          cd cli
-          npm sbom --sbom-format spdx > reshapr-reshapr-cli-${{ github.event.inputs.version }}.spdx-sbom.json
-          npm publish --provenance
-          npm pack
-
       - name: Publish package with JReleaser
         env:
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
