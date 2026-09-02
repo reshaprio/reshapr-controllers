@@ -54,6 +54,7 @@ Throughout this documentation you will encounter the following conventions:
 ## Additional resources
 
 * Repository top-level [`README.md`](../README.md)
+* Architecture overview: [`ARCHITECTURE.md`](../ARCHITECTURE.md)
 * Contribution guide: [`CONTRIBUTING.md`](../CONTRIBUTING.md)
 * Sample manifests: [`deploy/samples/`](../deploy/samples/)
 * CRD schemas: [`deploy/crd/`](../deploy/crd/)
