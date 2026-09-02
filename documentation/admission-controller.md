@@ -29,7 +29,8 @@ following Kubernetes objects (see [`admission/k8s/`](../admission/k8s/)):
 ### TLS with cert-manager
 
 The webhook must be served over HTTPS with a certificate trusted by the Kubernetes API server.
-[cert-manager](https://cert-manager.io/) is used to automate certificate issuance and rotation.
+[cert-manager](https://cert-manager.io/) is used as the **default and recommended** way to
+automate certificate issuance and rotation.
 
 The `MutatingWebhookConfiguration` uses the well-known
 `cert-manager.io/inject-ca-from` annotation so that cert-manager injects the CA bundle into the
@@ -49,6 +50,153 @@ environment variables:
 * `QUARKUS_HTTP_SSL_CERTIFICATE_KEY_STORE_FILE_TYPE=PKCS12`
 * `QUARKUS_HTTP_SSL_CERTIFICATE_KEY_STORE_PASSWORD` — pulled from the
   `reshapr-admission-controller-tls-pass` Secret.
+
+### Alternatives to cert-manager
+
+Not every cluster runs cert-manager. The admission controller only requires **two things** to
+be provided by the TLS bootstrap mechanism you choose, whatever it is:
+
+1. A `Secret` in the `reshapr-system` namespace containing a **PKCS12 keystore** exposing a
+   server certificate valid for the DNS name
+   `reshapr-admission-controller.reshapr-system.svc`. The Deployment expects the following
+   keys (see [`admission/k8s/admission-controller.yaml`](../admission/k8s/admission-controller.yaml)):
+   * `keystore.p12` — the PKCS12 keystore itself (mounted at `/etc/certs/keystore.p12`),
+   * a `password` key in the `reshapr-admission-controller-tls-pass` Secret — used to open the keystore.
+2. The `caBundle` field of the `MutatingWebhookConfiguration` populated with the **CA
+   certificate** that signed the server certificate above.
+
+The sections below describe three alternative ways to satisfy these two requirements, ordered
+from most portable to platform-specific.
+
+#### Option A — Bring Your Own certificate (BYO)
+
+If you already operate a corporate PKI (HashiCorp Vault PKI, AWS Private CA, Smallstep, an
+internal ACME server, …), you can provision the certificate outside the cluster and inject it
+as a plain Kubernetes `Secret`.
+
+1. Issue a leaf certificate for the DNS name
+   `reshapr-admission-controller.reshapr-system.svc` with your PKI.
+2. Bundle the resulting certificate and private key into a PKCS12 keystore protected by a
+   password. With `openssl`:
+
+   ```sh
+   openssl pkcs12 -export \
+     -inkey tls.key -in tls.crt \
+     -out keystore.p12 -password pass:$KEYSTORE_PASSWORD
+   ```
+
+3. Create the two Secrets in the `reshapr-system` namespace:
+
+   ```sh
+   kubectl -n reshapr-system create secret generic reshapr-admission-controller-tls-secret \
+     --from-file=keystore.p12=./keystore.p12
+
+   kubectl -n reshapr-system create secret generic reshapr-admission-controller-tls-pass \
+     --from-literal=password=$KEYSTORE_PASSWORD
+   ```
+
+4. Remove the `cert-manager.io/inject-ca-from` annotation from the
+   `MutatingWebhookConfiguration` and set `webhooks[0].clientConfig.caBundle` to the
+   base64-encoded PEM of the CA that signed your certificate:
+
+   ```yaml
+   webhooks:
+     - name: mutating.reshapr.io
+       clientConfig:
+         caBundle: <base64 PEM of the issuing CA>
+         service:
+           namespace: reshapr-system
+           name: reshapr-admission-controller
+           path: /mutate
+           port: 443
+   ```
+
+**Trade-offs.** Zero cluster dependency and full control over the certificate policy, at the
+cost of managing rotation yourself. Two useful companions:
+
+* [External Secrets Operator](https://external-secrets.io/) to synchronise the `Secret` from
+  Vault / AWS Secrets Manager / GCP Secret Manager / etc.,
+* [Reloader](https://github.com/stakater/Reloader) to automatically restart the admission
+  controller Pod when the underlying `Secret` is rotated.
+
+#### Option B — Kubernetes CertificateSigningRequest API
+
+Kubernetes ships a native [CSR API](https://kubernetes.io/docs/reference/access-authn-authz/certificate-signing-requests/)
+that some clusters expose as a signer suitable for internal service certificates (typically
+via the `kubernetes.io/kubelet-serving` signer or a cluster-specific one such as
+`kubernetes.io/kube-apiserver-client-kubelet` on kubeadm-based clusters).
+
+The high-level flow is:
+
+1. Generate a private key and a Certificate Signing Request for
+   `reshapr-admission-controller.reshapr-system.svc`.
+2. Submit a `CertificateSigningRequest` object referencing the appropriate signer.
+3. Approve it (`kubectl certificate approve <name>`), retrieve the signed certificate from
+   `status.certificate`, and materialise the two Secrets described in Option A.
+4. Use the signer's CA certificate as the `caBundle` in the `MutatingWebhookConfiguration`.
+
+**Trade-offs.** No third-party dependency, cryptographic material never leaves the cluster,
+but requires a signer that **accepts arbitrary DNS SANs and issues server certificates**
+— not all managed distributions expose one. Also, this API does not renew certificates
+automatically: you still need a Job or a `CronJob` to roll them before expiry.
+
+> [!NOTE]
+> Some clusters expose the API server's `extension-apiserver-authentication` CA (published in
+> the `kube-system/extension-apiserver-authentication` `ConfigMap`) as an ambient trust
+> anchor. Signing the webhook certificate with that CA is possible but very cluster-specific
+> and not recommended for portable installations.
+
+#### Option C — OpenShift `service-ca-operator`
+
+On **OpenShift** (and OKD), the built-in
+[Service CA Operator](https://docs.openshift.com/container-platform/latest/security/certificate_types_descriptions/service-ca-certificates.html)
+covers both requirements out of the box with two annotations:
+
+1. Annotate the `Service` so OpenShift generates a serving certificate as a `Secret`:
+
+   ```yaml
+   apiVersion: v1
+   kind: Service
+   metadata:
+     name: reshapr-admission-controller
+     namespace: reshapr-system
+     annotations:
+       service.beta.openshift.io/serving-cert-secret-name: reshapr-admission-controller-tls-secret
+   ```
+
+2. Annotate the `MutatingWebhookConfiguration` so the service CA operator injects the
+   corresponding `caBundle` automatically:
+
+   ```yaml
+   apiVersion: admissionregistration.k8s.io/v1
+   kind: MutatingWebhookConfiguration
+   metadata:
+     name: mutating.reshapr.io
+     annotations:
+       service.beta.openshift.io/inject-cabundle: "true"
+   ```
+
+Rotation is transparent — OpenShift updates the `Secret` and the `caBundle` in place before
+expiry.
+
+**Trade-offs.** Zero-config on OpenShift, but the resulting certificate is a PEM-formatted
+`kubernetes.io/tls` Secret whereas the admission controller expects a PKCS12 keystore. You
+will need to either:
+
+* add a small `initContainer` that converts the mounted `tls.crt` + `tls.key` into
+  `keystore.p12` at Pod startup with `openssl`, or
+* replace the Quarkus keystore-based configuration by its PEM equivalent
+  (`quarkus.http.ssl.certificate.files` / `quarkus.http.ssl.certificate.key-files`) via
+  environment variables on the Deployment.
+
+### Which option should I pick?
+
+| Situation                                                              | Recommended option                       |
+|------------------------------------------------------------------------|------------------------------------------|
+| I already run cert-manager (or don't mind installing it)               | Default — cert-manager                    |
+| I run OpenShift / OKD                                                  | Option C — `service-ca-operator`          |
+| I have a corporate PKI and want to keep certificates in a central vault| Option A — BYO certificate                |
+| My cluster exposes a usable signer and I want to stay Kubernetes-only  | Option B — CSR API                        |
 
 ## Webhook configuration
 

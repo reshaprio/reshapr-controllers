@@ -1,6 +1,6 @@
 # Admission Webhook Installation
 
-This page describes how to install the reShapr Controllers components on a Kubernetes cluster.
+This page describes how to install the reShapr Admission Webhook components on a Kubernetes cluster.
 
 ## Prerequisites
 
@@ -9,6 +9,13 @@ This page describes how to install the reShapr Controllers components on a Kuber
 * A running **reShapr control plane** reachable from within the cluster,
 * [cert-manager](https://cert-manager.io/) installed — required by the admission webhook to
   provision its serving TLS certificate.
+
+> [!NOTE]
+> cert-manager is the **default** TLS bootstrap mechanism used by the shipped manifests, but it
+> is not the only option. If you do not run cert-manager on your cluster, see
+> [Alternatives to cert-manager](./admission-controller.md#alternatives-to-cert-manager) in the
+> admission controller documentation for Bring-Your-Own certificate, Kubernetes CSR API and
+> OpenShift `service-ca-operator` setups.
 
 ## Install the Admission Webhook
 
