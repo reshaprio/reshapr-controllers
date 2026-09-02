@@ -4,9 +4,9 @@
 
 The reShapr **Admission Controller** is a Kubernetes
 [mutating admission webhook](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/)
-shipped as a standalone Quarkus application. It intercepts Pod `CREATE` and `UPDATE` operations
-across the cluster and mutates the Pod specification to integrate applications with the reShapr
-control plane — for example by injecting the reShapr proxy as a sidecar container.
+shipped as a standalone Quarkus application. It intercepts Pod `CREATE` operations and mutates
+the Pod specification to integrate applications with the reShapr control plane — for example by
+injecting the reShapr proxy as a sidecar container.
 
 The webhook is registered against the Kubernetes API through the
 [`admission/k8s/mutating-webhook-configuration.yml`](../admission/k8s/mutating-webhook-configuration.yml)
@@ -52,7 +52,7 @@ environment variables:
 
 ## Webhook configuration
 
-The `MutatingWebhookConfiguration` intercepts every operation on Pod resources cluster-wide:
+The `MutatingWebhookConfiguration` intercepts Pod creation across all workload namespaces:
 
 ```yaml
 webhooks:
@@ -60,9 +60,20 @@ webhooks:
     rules:
       - apiGroups:   [""]
         apiVersions: ["v1"]
-        operations:  ["*"]
+        operations:  ["CREATE"]
         resources:   ["pods"]
         scope:       "Namespaced"
+    # Never intercept pods in system namespaces — this prevents a self-deadlock where the
+    # webhook cannot be (re)deployed because the API server calls it while it is down.
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values:
+            - reshapr-system
+            - kube-system
+            - kube-node-lease
+            - kube-public
     clientConfig:
       service:
         namespace: reshapr-system
@@ -71,15 +82,28 @@ webhooks:
         port: 443
     admissionReviewVersions: ["v1"]
     sideEffects: None
+    # Fail open: if the webhook is unreachable, admit pods un-injected instead of blocking the cluster.
+    failurePolicy: Ignore
     timeoutSeconds: 5
 ```
 
 Key points:
 
 * The webhook is bound to the `POST /mutate` endpoint served by the admission controller.
+* Only Pod **`CREATE`** operations are intercepted — Pods are immutable after creation, so
+  `UPDATE` would bring no value and only add overhead on the API server hot path.
+* A `namespaceSelector` **excludes system namespaces** (`reshapr-system`, `kube-system`,
+  `kube-node-lease`, `kube-public`). This is critical to prevent a **self-deadlock**: if the
+  webhook were allowed to intercept its own namespace, the admission controller could not be
+  (re)deployed while it is down, because the API server would call the unreachable webhook to
+  admit its replacement Pod.
+* `failurePolicy: Ignore` makes the webhook **fail open**: if the admission controller is
+  unreachable or times out, Pods are admitted without sidecar injection instead of blocking the
+  entire cluster. This trades a strong guarantee (every eligible Pod gets a sidecar) for a
+  strong safety property (a failing webhook never freezes workload scheduling).
 * `sideEffects: None` allows the API server to safely retry the webhook without side effects.
 * `timeoutSeconds: 5` bounds how long the Kubernetes API server waits for the webhook response
-  before failing the admission review.
+  before falling back to `failurePolicy`.
 
 ## Mutation flow
 
@@ -96,6 +120,11 @@ sequenceDiagram
     API->>API: Apply patch and persist Pod
     API-->>-User: 201 Created / 200 OK
 ```
+
+> [!NOTE]
+> The API-server-to-webhook call above is only made for Pod `CREATE` operations in
+> non-system namespaces; other Pod operations and system namespaces are excluded by the
+> `MutatingWebhookConfiguration` rules and `namespaceSelector`.
 
 The webhook is implemented on top of the
 [Java Operator SDK webhooks framework](https://github.com/operator-framework/java-operator-sdk)
@@ -210,7 +239,10 @@ Reapply it once the issue is fixed:
 kubectl apply -f admission/k8s/mutating-webhook-configuration.yml
 ```
 
-> [!WARNING]
-> The webhook currently matches **all Pods in all namespaces**. When customizing it, consider
-> narrowing the scope with a `namespaceSelector` or `objectSelector` to avoid impacting
-> unrelated workloads.
+> [!NOTE]
+> The webhook already excludes the `reshapr-system`, `kube-system`, `kube-node-lease` and
+> `kube-public` namespaces via a `namespaceSelector`, and is configured with
+> `failurePolicy: Ignore` so that an unreachable webhook does not block Pod creation
+> cluster-wide. If you narrow the scope further (for example with an `objectSelector` or an
+> additional `namespaceSelector`), make sure your changes still preserve these safety
+> properties.
