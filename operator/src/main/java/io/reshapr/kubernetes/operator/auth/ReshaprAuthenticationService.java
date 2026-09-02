@@ -28,7 +28,7 @@ import java.net.http.HttpResponse;
 /**
  * Service responsible for authenticating with the reShapr control plane
  * using the projected service account token pattern.
- * <p>
+ *
  * Calls {@code POST /auth/login/token/service-account} on the target control
  * plane instance, providing:
  * <ul>
@@ -37,7 +37,6 @@ import java.net.http.HttpResponse;
  * </ul>
  * The response body is expected to contain a JWT bearer token that can then be
  * used for subsequent API calls.
- * </p>
  * @author laurent
  */
 @Singleton

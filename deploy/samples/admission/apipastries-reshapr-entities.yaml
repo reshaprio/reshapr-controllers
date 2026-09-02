@@ -19,7 +19,7 @@ spec:
   service:
     name: apipastries
     version: '0.0.1'
-  backendEndpoint: http://localhost:3003d
+  backendEndpoint: http://localhost:3003
 ---
 apiVersion: reshapr.io/v1alpha1
 kind: GatewayGroup
