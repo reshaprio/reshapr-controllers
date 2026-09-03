@@ -118,6 +118,19 @@ public class ConfigurationPlanReconciler extends BaseReshaprReconciler<Configura
          remotePlan.setServiceId(remoteService.getId());
          remotePlan.setBackendEndpoint(spec.getBackendEndpoint() != null ? spec.getBackendEndpoint() : "");
          
+         if (spec.getAudit() != null) {
+            remotePlan.setAudit(spec.getAudit());
+         }
+         if (spec.getIncludedOperations() != null) {
+            remotePlan.setIncludedOperations(spec.getIncludedOperations());
+         }
+         if (spec.getExcludedOperations() != null) {
+            remotePlan.setExcludedOperations(spec.getExcludedOperations());
+         }
+         if (spec.getCachePolicy() != null) {
+            remotePlan.setCachePolicy(spec.getCachePolicy());
+         }
+
          if (backendSecretId != null) {
             remotePlan.setBackendSecretId(backendSecretId);
          }

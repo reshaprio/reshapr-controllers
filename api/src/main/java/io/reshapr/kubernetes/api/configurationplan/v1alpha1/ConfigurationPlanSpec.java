@@ -26,7 +26,7 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "service", "backendEndpoint", "apiKey", "oauth2", "artifacts" })
+@JsonPropertyOrder({ "service", "backendEndpoint", "apiKey", "oauth2", "artifacts", "audit", "includedOperations", "excludedOperations", "cachePolicy" })
 @Buildable(editableEnabled = false, builderPackage = "io.fabric8.kubernetes.api.builder")
 public class ConfigurationPlanSpec {
 
@@ -44,6 +44,18 @@ public class ConfigurationPlanSpec {
 
    @JsonPropertyDescription("Reserved for future usage")
    private List<String> artifacts;
+
+   @JsonPropertyDescription("Whether the audit log will be enabled and calls logged. Default is false.")
+   private Boolean audit = false;
+
+   @JsonPropertyDescription("List of included operation names")
+   private List<String> includedOperations;
+
+   @JsonPropertyDescription("List of excluded operation names")
+   private List<String> excludedOperations;
+
+   @JsonPropertyDescription("The cache policy to apply")
+   private String cachePolicy;
 
    public ServiceRef getService() {
       return service;
@@ -83,5 +95,37 @@ public class ConfigurationPlanSpec {
 
    public void setArtifacts(List<String> artifacts) {
       this.artifacts = artifacts;
+   }
+
+   public Boolean getAudit() {
+      return audit;
+   }
+
+   public void setAudit(Boolean audit) {
+      this.audit = audit;
+   }
+
+   public List<String> getIncludedOperations() {
+      return includedOperations;
+   }
+
+   public void setIncludedOperations(List<String> includedOperations) {
+      this.includedOperations = includedOperations;
+   }
+
+   public List<String> getExcludedOperations() {
+      return excludedOperations;
+   }
+
+   public void setExcludedOperations(List<String> excludedOperations) {
+      this.excludedOperations = excludedOperations;
+   }
+
+   public String getCachePolicy() {
+      return cachePolicy;
+   }
+
+   public void setCachePolicy(String cachePolicy) {
+      this.cachePolicy = cachePolicy;
    }
 }

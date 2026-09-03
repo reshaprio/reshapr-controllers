@@ -1211,11 +1211,14 @@ components:
           type: array
           items:
             type: string
-        includedOperatoions:
+        includedOperations:
           description: List of included operation names
           type: array
           items:
             type: string
+        cachePolicy:
+          description: The cache policy to apply
+          type: string
         includedArtifacts:
           description: List of selected attached artifact names. Empty (or absent) means all the
             attached artifacts of the service apply. The service main artifact is never impacted.
