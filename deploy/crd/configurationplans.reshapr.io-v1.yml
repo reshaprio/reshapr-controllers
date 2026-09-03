@@ -27,9 +27,26 @@ spec:
                 items:
                   type: "string"
                 type: "array"
+              audit:
+                description: "Whether the audit log will be enabled and calls logged.\
+                  \ Default is false."
+                type: "boolean"
               backendEndpoint:
                 description: "Backend endpoint for this Configuration Plan"
                 type: "string"
+              cachePolicy:
+                description: "The cache policy to apply"
+                type: "string"
+              excludedOperations:
+                description: "List of excluded operation names"
+                items:
+                  type: "string"
+                type: "array"
+              includedOperations:
+                description: "List of included operation names"
+                items:
+                  type: "string"
+                type: "array"
               oauth2:
                 description: "OAuth2 Client Configuration"
                 properties:
