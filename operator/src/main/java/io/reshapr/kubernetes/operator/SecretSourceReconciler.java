@@ -353,7 +353,7 @@ public class SecretSourceReconciler extends BaseReshaprReconciler<SecretSource> 
       secret.setName(secretSpec.getName());
       secret.setDescription(secretSpec.getDescription());
       secret.setType(resolveType(secretSpec.getType()));
-      secret.setUseElicitation(secretSpec.getUseElicitation() != null ? secretSpec.getUseElicitation().toString() : null);
+      secret.setUseElicitation(secretSpec.getUseElicitation());
 
       Map<String, String> data = kubeSecret != null ? kubeSecret.getData() : null;
       SecretValuesFromSpec valuesFromSpec = secretSpec.getValuesFrom();
