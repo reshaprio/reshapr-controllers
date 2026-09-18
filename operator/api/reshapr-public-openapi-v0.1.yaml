@@ -1278,6 +1278,11 @@ components:
           $ref: '#/components/schemas/CachePolicy'
           description: Caching configuration for this Configuration Plan. When absent the
             proxy falls back to its built-in defaults.
+        headerPolicy:
+          $ref: '#/components/schemas/HeaderPolicy'
+          description: Header propagation policy controlling which request/response headers
+            are forwarded to/from the backend. When absent the proxy applies its built-in
+            defaults (e.g. Authorization and Cookie are stripped from backend requests).
     CachePolicy:
       description: Caching configuration of a Configuration Plan. Both fields are optional;
         when absent the proxy falls back to its built-in defaults.
@@ -1289,6 +1294,56 @@ components:
           type: integer
         cacheScope:
           description: Cache scope to advertise (e.g. "public" or "private")
+          type: string
+    HeaderPolicy:
+      description: Header propagation policy of a Configuration Plan. Only the request
+        direction is honored today; the response direction is reserved for future use.
+        When absent the proxy applies its built-in defaults.
+      type: object
+      properties:
+        request:
+          $ref: '#/components/schemas/HeaderRules'
+          description: Allow/deny/rename directives applied to headers forwarded to the backend.
+        response:
+          $ref: '#/components/schemas/HeaderRules'
+          description: Allow/deny/rename directives applied to headers returned from the backend.
+            Reserved for future use, not enforced yet.
+    HeaderRules:
+      description: A set of allow/deny/rename directives applied to headers in a single direction.
+        All fields are optional.
+      type: object
+      properties:
+        allow:
+          description: Header names explicitly allowed to be propagated. When provided, only
+            these headers are forwarded (minus any restricted by default).
+          type: array
+          items:
+            type: string
+        deny:
+          description: Header names explicitly denied from being propagated. Takes precedence
+            over the allow-list.
+          type: array
+          items:
+            type: string
+        rename:
+          description: Rename directives moving an incoming header to a different name before
+            propagation.
+          type: array
+          items:
+            $ref: '#/components/schemas/HeaderRename'
+    HeaderRename:
+      description: A single header rename directive; removes the "from" header and sets its
+        value on the "to" header before propagation.
+      required:
+      - from
+      - to
+      type: object
+      properties:
+        from:
+          description: Name of the incoming header to rename.
+          type: string
+        to:
+          description: Target header name the value is propagated under.
           type: string
     ActiveExposition:
       description: An Exposition that is currently active. ie. exposed by at least

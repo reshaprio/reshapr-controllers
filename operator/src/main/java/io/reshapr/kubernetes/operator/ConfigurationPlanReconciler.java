@@ -30,6 +30,9 @@ import io.reshapr.client.model.SecretType;
 import io.reshapr.kubernetes.api.configurationplan.v1alpha1.ConfigurationPlan;
 import io.reshapr.kubernetes.api.configurationplan.v1alpha1.ConfigurationPlanSpec;
 import io.reshapr.kubernetes.api.configurationplan.v1alpha1.ConfigurationPlanStatus;
+import io.reshapr.kubernetes.api.configurationplan.v1alpha1.HeaderPolicy;
+import io.reshapr.kubernetes.api.configurationplan.v1alpha1.HeaderRename;
+import io.reshapr.kubernetes.api.configurationplan.v1alpha1.HeaderRules;
 import io.reshapr.kubernetes.api.configurationplan.v1alpha1.OAuth2Spec;
 import io.reshapr.kubernetes.api.model.Status;
 import io.reshapr.kubernetes.operator.auth.ReshaprAnnotations;
@@ -121,6 +124,9 @@ public class ConfigurationPlanReconciler extends BaseReshaprReconciler<Configura
          if (spec.getAudit() != null) {
             remotePlan.setAudit(spec.getAudit());
          }
+         if (spec.getArtifacts() != null) {
+            remotePlan.setIncludedArtifacts(spec.getArtifacts());
+         }
          if (spec.getIncludedOperations() != null) {
             remotePlan.setIncludedOperations(spec.getIncludedOperations());
          }
@@ -132,6 +138,9 @@ public class ConfigurationPlanReconciler extends BaseReshaprReconciler<Configura
             clientCachePolicy.setTtlMs(spec.getCachePolicy().getTtlMs());
             clientCachePolicy.setCacheScope(spec.getCachePolicy().getCacheScope());
             remotePlan.setCachePolicy(clientCachePolicy);
+         }
+         if (spec.getHeaderPolicy() != null) {
+            remotePlan.setHeaderPolicy(toClientHeaderPolicy(spec.getHeaderPolicy()));
          }
 
          if (backendSecretId != null) {
@@ -178,6 +187,38 @@ public class ConfigurationPlanReconciler extends BaseReshaprReconciler<Configura
       currentStatus.setMessage(message);
       resource.setStatus(currentStatus);
       return UpdateControl.patchStatus(resource);
+   }
+
+   private static io.reshapr.client.model.HeaderPolicy toClientHeaderPolicy(HeaderPolicy headerPolicy) {
+      io.reshapr.client.model.HeaderPolicy clientHeaderPolicy = new io.reshapr.client.model.HeaderPolicy();
+      if (headerPolicy.getRequest() != null) {
+         clientHeaderPolicy.setRequest(toClientHeaderRules(headerPolicy.getRequest()));
+      }
+      if (headerPolicy.getResponse() != null) {
+         clientHeaderPolicy.setResponse(toClientHeaderRules(headerPolicy.getResponse()));
+      }
+      return clientHeaderPolicy;
+   }
+
+   private static io.reshapr.client.model.HeaderRules toClientHeaderRules(HeaderRules rules) {
+      io.reshapr.client.model.HeaderRules clientRules = new io.reshapr.client.model.HeaderRules();
+      if (rules.getAllow() != null) {
+         clientRules.setAllow(rules.getAllow());
+      }
+      if (rules.getDeny() != null) {
+         clientRules.setDeny(rules.getDeny());
+      }
+      if (rules.getRename() != null) {
+         java.util.List<io.reshapr.client.model.HeaderRename> renames = new java.util.ArrayList<>();
+         for (HeaderRename rename : rules.getRename()) {
+            io.reshapr.client.model.HeaderRename clientRename = new io.reshapr.client.model.HeaderRename();
+            clientRename.setFrom(rename.getFrom());
+            clientRename.setTo(rename.getTo());
+            renames.add(clientRename);
+         }
+         clientRules.setRename(renames);
+      }
+      return clientRules;
    }
 
    @Override

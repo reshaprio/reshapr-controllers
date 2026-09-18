@@ -26,7 +26,7 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "service", "backendEndpoint", "apiKey", "oauth2", "artifacts", "audit", "includedOperations", "excludedOperations", "cachePolicy" })
+@JsonPropertyOrder({ "service", "backendEndpoint", "apiKey", "oauth2", "artifacts", "audit", "includedOperations", "excludedOperations", "cachePolicy", "headerPolicy" })
 @Buildable(editableEnabled = false, builderPackage = "io.fabric8.kubernetes.api.builder")
 public class ConfigurationPlanSpec {
 
@@ -56,6 +56,9 @@ public class ConfigurationPlanSpec {
 
    @JsonPropertyDescription("The cache policy to apply")
    private CachePolicy cachePolicy;
+
+   @JsonPropertyDescription("Header propagation policy controlling which request/response headers are forwarded to/from the backend")
+   private HeaderPolicy headerPolicy;
 
    public ServiceRef getService() {
       return service;
@@ -127,5 +130,13 @@ public class ConfigurationPlanSpec {
 
    public void setCachePolicy(CachePolicy cachePolicy) {
       this.cachePolicy = cachePolicy;
+   }
+
+   public HeaderPolicy getHeaderPolicy() {
+      return headerPolicy;
+   }
+
+   public void setHeaderPolicy(HeaderPolicy headerPolicy) {
+      this.headerPolicy = headerPolicy;
    }
 }

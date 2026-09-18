@@ -74,13 +74,18 @@ status:
 
 ## ConfigurationPlan specification details
 
-| Property           | Description                                                                                                                                                        |
-|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `service`          | **Mandatory**. Reference to the target [Service](./service-cr.md) this plan configures. See _Service reference_ below.                                             |
-| `backendEndpoint`  | **Mandatory**. URL of the backend implementation the reShapr gateway should route traffic to.                                                                       |
-| `apiKey`           | **Optional**. When `true`, the control plane generates an API Key for this plan. Defaults to `false`.                                                              |
-| `oauth2`           | **Optional**. OAuth2 client credentials to attach to this plan. See _OAuth2 specification_ below.                                                                  |
-| `artifacts`        | **Optional**. Reserved for future usage.                                                                                                                            |
+| Property           | Description                                                                                                                                                                                                                                                                  |
+|--------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `service`          | **Mandatory**. Reference to the target [Service](./service-cr.md) this plan configures. See _Service reference_ below.                                                                                                                                                       |
+| `backendEndpoint`  | **Mandatory**. URL of the backend implementation the reShapr gateway should route traffic to.                                                                                                                                                                                |
+| `apiKey`           | **Optional**. When `true`, the control plane generates an API Key for this plan. Defaults to `false`.                                                                                                                                                                        |
+| `oauth2`           | **Optional**. OAuth2 client credentials to attach to this plan. See _OAuth2 specification_ below.                                                                                                                                                                            |
+| `artifacts`        | **Optional**. List of selected attached artifact names. Empty (or absent) means all the attached artifacts of the service apply. The service main artifact is never impacted.                                                                                                |
+| `audit`               | **Optional**. When `true`, the gateway logs each call routed through this plan into the audit log. Defaults to `false`.                                                                                                                                                    |
+| `includedOperations`  | **Optional**. List of operation names to explicitly expose through this plan. When provided, only these operations are routed; all others are rejected. Mutually exclusive with `excludedOperations`.                                                                       |
+| `excludedOperations`  | **Optional**. List of operation names to exclude from this plan. When provided, every operation of the Service is exposed except those listed. Mutually exclusive with `includedOperations`.                                                                                |
+| `cachePolicy`      | **Optional**. Caching configuration applied by the gateway. See _Cache policy_ below. When absent the proxy falls back to its built-in defaults.                                                                                                                             |
+| `headerPolicy`     | **Optional**. Header propagation policy controlling which request/response headers are forwarded to/from the backend. See _Header policy_ below. When absent the proxy applies its built-in defaults (e.g. `Authorization` and `Cookie` are stripped from backend requests). |
 
 ### Service reference (`spec.service`)
 
@@ -100,6 +105,40 @@ status:
 > Do not store production OAuth2 client secrets in plain text in Git repositories. Prefer using
 > a `Secret`-backed workflow (e.g. Sealed Secrets, External Secrets Operator) to inject the
 > credentials into your CR before applying.
+
+### Cache policy (`spec.cachePolicy`)
+
+| Property      | Description                                                                       |
+|---------------|-----------------------------------------------------------------------------------|
+| `ttlMs`       | Time-to-live in milliseconds for client-side MCP caching.                          |
+| `cacheScope`  | Cache scope to advertise (e.g. `public` or `private`).                             |
+
+### Header policy (`spec.headerPolicy`)
+
+Controls which HTTP headers the gateway propagates. Only the `request` direction is honored today;
+the `response` direction is reserved for future use. When `headerPolicy` is absent, the proxy
+applies its built-in defaults (notably, `Authorization` and `Cookie` are stripped from backend
+requests).
+
+| Property    | Description                                                                                                     |
+|-------------|-----------------------------------------------------------------------------------------------------------------|
+| `request`   | **Optional**. Allow/deny/rename directives applied to headers forwarded to the backend. See _Header rules_ below. |
+| `response`  | **Optional**. Allow/deny/rename directives applied to headers returned from the backend. Reserved for future use. |
+
+#### Header rules (`spec.headerPolicy.request` / `spec.headerPolicy.response`)
+
+| Property   | Description                                                                                                                       |
+|------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| `allow`    | **Optional**. List of header names explicitly allowed to be propagated. When provided, only these headers are forwarded (minus any restricted by default). |
+| `deny`     | **Optional**. List of header names explicitly denied from being propagated. Takes precedence over the allow-list.                  |
+| `rename`   | **Optional**. Rename directives moving an incoming header to a different name before propagation. See _Header rename_ below.       |
+
+#### Header rename (`spec.headerPolicy.request.rename[]`)
+
+| Property   | Description                                                        |
+|------------|--------------------------------------------------------------------|
+| `from`     | **Mandatory**. Name of the incoming header to rename.               |
+| `to`       | **Mandatory**. Target header name the value is propagated under.    |
 
 ## Complete example
 
@@ -121,4 +160,13 @@ spec:
   oauth2:
     clientId: pastries-gateway
     clientSecret: change-me
+  headerPolicy:
+    request:
+      allow:
+        - X-Request-Id
+      deny:
+        - X-Internal-Debug
+      rename:
+        - from: X-Client-Id
+          to: X-Consumer-Id
 ```
