@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.reshapr.kubernetes.api.resource.v1alpha1;
+package io.reshapr.kubernetes.api.resources.v1alpha1;
 
 import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -34,9 +34,9 @@ import io.sundr.builder.annotations.BuildableReference;
  */
 @Group("reshapr.io")
 @Version("v1alpha1")
-@ShortNames("rsrc")
+@ShortNames("res")
 @Plural("resources")
 @Buildable(editableEnabled = false, builderPackage = "io.fabric8.kubernetes.api.builder", refs = {
       @BuildableReference(ObjectMeta.class) })
-public class Resource extends CustomResource<ResourceSpec, ResourceStatus> implements Namespaced {
+public class Resources extends CustomResource<ResourcesSpec, ResourcesStatus> implements Namespaced {
 }

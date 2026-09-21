@@ -1,7 +1,7 @@
 apiVersion: reshapr.io/v1alpha1
-kind: Resource
+kind: Resources
 metadata:
-  name: open-meteo-gitops-resource
+  name: open-meteo-gitops-resources
   annotations:
     reshapr.io/instance: reshapr-control-plane-ctrl.reshapr-system
     reshapr.io/organization: reshapr

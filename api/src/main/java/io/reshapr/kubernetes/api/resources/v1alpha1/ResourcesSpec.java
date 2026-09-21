@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.reshapr.kubernetes.api.resource.v1alpha1;
+package io.reshapr.kubernetes.api.resources.v1alpha1;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -25,7 +25,7 @@ import io.sundr.builder.annotations.Buildable;
 import java.util.Map;
 
 /**
- * This is the {@code specification} of a {@link Resource} custom resource.
+ * This is the {@code specification} of a {@link Resources} custom resource.
  * It holds a reference to a Service and typed maps of resource definitions
  * (and optional resource templates) that will be attached as
  * {@code RESHAPR_RESOURCES} artifacts in the control plane.
@@ -38,7 +38,7 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({ "service", "resources", "resourceTemplates" })
 @Buildable(editableEnabled = false, builderPackage = "io.fabric8.kubernetes.api.builder")
-public class ResourceSpec {
+public class ResourcesSpec {
 
     @JsonPropertyDescription("Holds reference information about the Service this resource artifact relates to.")
     private ServiceRef service;

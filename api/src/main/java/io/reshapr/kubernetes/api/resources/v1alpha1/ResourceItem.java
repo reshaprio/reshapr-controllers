@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.reshapr.kubernetes.api.resource.v1alpha1;
+package io.reshapr.kubernetes.api.resources.v1alpha1;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -24,33 +24,46 @@ import io.sundr.builder.annotations.Buildable;
 import java.util.List;
 
 /**
- * One resource template definition, keyed by URI in {@link ResourceSpec#getResourceTemplates()}.
- * Models {@code definitions/resourceTemplateItem} from {@code Resources-v1alpha1-schema.json}.
+ * One resource definition, keyed by URI in {@link ResourcesSpec#getResources()}.
+ * Models {@code definitions/resourceItem} from {@code Resources-v1alpha1-schema.json}.
+ * Content is provided via exactly one of: {@code text}, {@code blob}, or {@code remoteContent}.
  *
  * @author vaishnav
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "name", "title", "description", "mimeType", "icons", "annotations" })
+@JsonPropertyOrder({ "name", "title", "description", "mimeType", "size", "text", "blob", "remoteContent", "icons", "annotations" })
 @Buildable(editableEnabled = false, builderPackage = "io.fabric8.kubernetes.api.builder")
-public class ResourceTemplateItem {
+public class ResourceItem {
 
-    @JsonPropertyDescription("The name of this resource template.")
+    @JsonPropertyDescription("The name of this resource.")
     private String name;
 
-    @JsonPropertyDescription("Human readable title of this resource template.")
+    @JsonPropertyDescription("Human readable title of this resource.")
     private String title;
 
-    @JsonPropertyDescription("Human readable long description of this resource template.")
+    @JsonPropertyDescription("Human readable long description of this resource.")
     private String description;
 
-    @JsonPropertyDescription("The MIME type of these resource templates.")
+    @JsonPropertyDescription("The MIME type of this resource.")
     private String mimeType;
 
-    @JsonPropertyDescription("Optional icons for this resource template.")
+    @JsonPropertyDescription("The size of this resource in bytes.")
+    private Integer size;
+
+    @JsonPropertyDescription("The text content of this resource, if applicable. Mutually exclusive with blob and remoteContent.")
+    private String text;
+
+    @JsonPropertyDescription("The base64 encoded binary content of this resource, if applicable. Mutually exclusive with text and remoteContent.")
+    private String blob;
+
+    @JsonPropertyDescription("The remote URI where this resource content can be found, if applicable. Mutually exclusive with text and blob.")
+    private String remoteContent;
+
+    @JsonPropertyDescription("Optional icons for this resource.")
     private List<ResourceIconItem> icons;
 
-    @JsonPropertyDescription("Optional annotations for this resource template.")
+    @JsonPropertyDescription("Optional annotations for this resource.")
     private ResourceAnnotations annotations;
 
     public String getName() { return name; }
@@ -64,6 +77,18 @@ public class ResourceTemplateItem {
 
     public String getMimeType() { return mimeType; }
     public void setMimeType(String mimeType) { this.mimeType = mimeType; }
+
+    public Integer getSize() { return size; }
+    public void setSize(Integer size) { this.size = size; }
+
+    public String getText() { return text; }
+    public void setText(String text) { this.text = text; }
+
+    public String getBlob() { return blob; }
+    public void setBlob(String blob) { this.blob = blob; }
+
+    public String getRemoteContent() { return remoteContent; }
+    public void setRemoteContent(String remoteContent) { this.remoteContent = remoteContent; }
 
     public List<ResourceIconItem> getIcons() { return icons; }
     public void setIcons(List<ResourceIconItem> icons) { this.icons = icons; }

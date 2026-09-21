@@ -8,7 +8,7 @@ The reShapr Controllers repository provides three complementary Kubernetes build
 extend a running reShapr **control plane** with a Kubernetes-native experience:
 
 * **Custom Resource Definitions (CRDs)** representing reShapr concepts (Services, Gateway Groups,
-  Configuration Plans, Custom Tools) as first-class Kubernetes objects,
+  Configuration Plans, Custom Tools, Resources) as first-class Kubernetes objects,
 * A **Kubernetes Operator** that reconciles those CRDs against a target reShapr control plane
   instance,
 * An **Admission Webhook** that mutates application Pods to inject a reShapr proxy sidecar and
@@ -33,7 +33,7 @@ extend a running reShapr **control plane** with a Kubernetes-native experience:
 | [`Exposition`](./exposition-cr.md)                 | Namespaced | Expose a Service on a GatewayGroup through a specific ConfigurationPlan.    |
 | [`SecretSource`](./secretsource-cr.md)             | Namespaced | Declare Secrets in the control plane, optionally sourced from Kubernetes Secrets. |
 | [`CustomTools`](./customtools-cr.md)               | Namespaced | Attach declarative or scripted custom tools to an existing Service.         |
-| [`Resource`](./resource-cr.md)                     | Namespaced | Attach static/remote resources and resource templates to an existing Service. |
+| [`Resources`](./resources-cr.md)                     | Namespaced | Attach static/remote resources and resources templates to an existing Service. |
 
 ### Admission webhook
 

@@ -18,8 +18,8 @@ package io.reshapr.kubernetes.operator;
 import io.reshapr.client.model.ArtifactType;
 import io.reshapr.kubernetes.api.model.ServiceRef;
 import io.reshapr.kubernetes.api.model.Status;
-import io.reshapr.kubernetes.api.resource.v1alpha1.Resource;
-import io.reshapr.kubernetes.api.resource.v1alpha1.ResourceStatus;
+import io.reshapr.kubernetes.api.resources.v1alpha1.Resources;
+import io.reshapr.kubernetes.api.resources.v1alpha1.ResourcesStatus;
 import io.reshapr.kubernetes.operator.auth.ReshaprApiClientFactory;
 import io.reshapr.kubernetes.operator.client.ArtifactAttachClient;
 
@@ -34,7 +34,7 @@ import static io.javaoperatorsdk.operator.api.reconciler.Constants.WATCH_ALL_NAM
 
 /**
  * Reconciler for Resource custom resource.
- * Keeps a reShapr {@link Resource} custom resource in sync with its counterpart
+ * Keeps a reShapr {@link Resources} custom resource in sync with its counterpart
  * in the control plane as a {@code RESHAPR_RESOURCES} artifact.
  *
  * @author vaishnav
@@ -42,23 +42,23 @@ import static io.javaoperatorsdk.operator.api.reconciler.Constants.WATCH_ALL_NAM
 @ControllerConfiguration(informer = @Informer(namespaces = WATCH_ALL_NAMESPACES))
 @SuppressWarnings("unused")
 @ApplicationScoped
-public class ResourceReconciler extends BaseArtifactReconciler<Resource> {
+public class ResourcesReconciler extends BaseArtifactReconciler<Resources> {
 
    private final ObjectMapper objectMapper;
 
-   ResourceReconciler() {
+   ResourcesReconciler() {
       this.objectMapper = new ObjectMapper();
    }
 
    @Inject
-   public ResourceReconciler(ReshaprApiClientFactory apiClientFactory, ArtifactAttachClient artifactAttachClient, ObjectMapper objectMapper) {
+   public ResourcesReconciler(ReshaprApiClientFactory apiClientFactory, ArtifactAttachClient artifactAttachClient, ObjectMapper objectMapper) {
       super(apiClientFactory, artifactAttachClient);
       this.objectMapper = objectMapper;
    }
 
    @Override
-   protected ServiceRef getServiceRef(Resource resource) {
-      return resource.getSpec() != null ? resource.getSpec().getService() : null;
+   protected ServiceRef getServiceRef(Resources resources) {
+      return resources.getSpec() != null ? resources.getSpec().getService() : null;
    }
 
    @Override
@@ -67,35 +67,35 @@ public class ResourceReconciler extends BaseArtifactReconciler<Resource> {
    }
 
    @Override
-   protected String getArtifactContent(Resource resource) throws Exception {
+   protected String getArtifactContent(Resources resources) throws Exception {
       ObjectNode root = objectMapper.createObjectNode();
       root.put("apiVersion", "reshapr.io/v1alpha1");
-      root.put("kind", "Resource");
-      if (resource.getSpec() != null) {
-         if (resource.getSpec().getService() != null) {
-            root.set("service", objectMapper.valueToTree(resource.getSpec().getService()));
+      root.put("kind", "Resources");
+      if (resources.getSpec() != null) {
+         if (resources.getSpec().getService() != null) {
+            root.set("service", objectMapper.valueToTree(resources.getSpec().getService()));
          }
-         if (resource.getSpec().getResources() != null) {
-            root.set("resources", objectMapper.valueToTree(resource.getSpec().getResources()));
+         if (resources.getSpec().getResources() != null) {
+            root.set("resources", objectMapper.valueToTree(resources.getSpec().getResources()));
          }
-         if (resource.getSpec().getResourceTemplates() != null) {
-            root.set("resourceTemplates", objectMapper.valueToTree(resource.getSpec().getResourceTemplates()));
+         if (resources.getSpec().getResourceTemplates() != null) {
+            root.set("resourceTemplates", objectMapper.valueToTree(resources.getSpec().getResourceTemplates()));
          }
       }
       return objectMapper.writeValueAsString(root);
    }
 
    @Override
-   protected String getArtifactName(Resource resource) {
-      return resource.getMetadata().getName();
+   protected String getArtifactName(Resources resources) {
+      return resources.getMetadata().getName();
    }
 
    @Override
-   protected void updateStatus(Resource resource, String serviceId, String artifactId, Status status, String message) {
-      ResourceStatus s = resource.getStatus();
+   protected void updateStatus(Resources resources, String serviceId, String artifactId, Status status, String message) {
+      ResourcesStatus s = resources.getStatus();
       if (s == null) {
-         s = new ResourceStatus();
-         resource.setStatus(s);
+         s = new ResourcesStatus();
+         resources.setStatus(s);
       }
       if (serviceId != null) {
          s.setServiceId(serviceId);

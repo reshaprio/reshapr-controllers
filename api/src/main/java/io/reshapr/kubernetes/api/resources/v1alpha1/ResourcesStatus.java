@@ -13,20 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.reshapr.kubernetes.api.resource.v1alpha1;
+package io.reshapr.kubernetes.api.resources.v1alpha1;
 
 import io.reshapr.kubernetes.api.model.Status;
 import io.sundr.builder.annotations.Buildable;
 
 /**
- * This is the {@code status} sub-resource of a {@link Resource} custom resource.
+ * This is the {@code status} sub-resource of a {@link Resources} custom resource.
  * It is updated by the operator to reflect the current synchronization state
  * with the Reshapr control plane.
  *
  * @author vaishnav
  */
 @Buildable(editableEnabled = false, builderPackage = "io.fabric8.kubernetes.api.builder")
-public class ResourceStatus {
+public class ResourcesStatus {
 
     private Status state;
     private String message;

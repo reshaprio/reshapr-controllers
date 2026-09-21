@@ -20,12 +20,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.reshapr.client.model.ArtifactType;
 import io.reshapr.kubernetes.api.model.ServiceRef;
 import io.reshapr.kubernetes.api.model.Status;
-import io.reshapr.kubernetes.api.resource.v1alpha1.Resource;
-import io.reshapr.kubernetes.api.resource.v1alpha1.ResourceAnnotations;
-import io.reshapr.kubernetes.api.resource.v1alpha1.ResourceItem;
-import io.reshapr.kubernetes.api.resource.v1alpha1.ResourceSpec;
-import io.reshapr.kubernetes.api.resource.v1alpha1.ResourceStatus;
-import io.reshapr.kubernetes.api.resource.v1alpha1.ResourceTemplateItem;
+import io.reshapr.kubernetes.api.resources.v1alpha1.Resources;
+import io.reshapr.kubernetes.api.resources.v1alpha1.ResourceAnnotations;
+import io.reshapr.kubernetes.api.resources.v1alpha1.ResourceItem;
+import io.reshapr.kubernetes.api.resources.v1alpha1.ResourcesSpec;
+import io.reshapr.kubernetes.api.resources.v1alpha1.ResourcesStatus;
+import io.reshapr.kubernetes.api.resources.v1alpha1.ResourceTemplateItem;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,32 +37,32 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Unit tests for {@link ResourceReconciler}.
+ * Unit tests for {@link ResourcesReconciler}.
  * Validates artifact type, content serialization and status update logic
  * without requiring a live Kubernetes cluster or control-plane connection.
  *
  * @author vaishnav
  */
-class ResourceReconcilerTest {
+class ResourcesReconcilerTest {
 
-    private ResourceReconciler reconciler;
+    private ResourcesReconciler reconciler;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
-        reconciler = new ResourceReconciler();
+        reconciler = new ResourcesReconciler();
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
 
-    private Resource buildResource(String name, String serviceName, String serviceVersion,
-                                   Map<String, ResourceItem> resources,
-                                   Map<String, ResourceTemplateItem> resourceTemplates) {
+    private Resources buildResources(String name, String serviceName, String serviceVersion,
+                                     Map<String, ResourceItem> resources,
+                                     Map<String, ResourceTemplateItem> resourceTemplates) {
         ServiceRef serviceRef = new ServiceRef();
         serviceRef.setName(serviceName);
         serviceRef.setVersion(serviceVersion);
 
-        ResourceSpec spec = new ResourceSpec();
+        ResourcesSpec spec = new ResourcesSpec();
         spec.setService(serviceRef);
         spec.setResources(resources);
         spec.setResourceTemplates(resourceTemplates);
@@ -71,10 +71,11 @@ class ResourceReconcilerTest {
         meta.setName(name);
         meta.setNamespace("test-ns");
 
-        Resource resource = new Resource();
-        resource.setMetadata(meta);
-        resource.setSpec(spec);
-        return resource;
+        Resources resourcesCR = new Resources();
+        resourcesCR.setMetadata(meta);
+        resourcesCR.setSpec(spec);
+
+        return resourcesCR;
     }
 
     private ResourceItem buildResourceItem(String name, String description, String text) {
@@ -103,8 +104,8 @@ class ResourceReconcilerTest {
 
     @Test
     void getServiceRef_returnsServiceFromSpec() {
-        Resource resource = buildResource("my-resource", "GitHub GraphQL", "20250917", null, null);
-        ServiceRef ref = reconciler.getServiceRef(resource);
+        Resources resources = buildResources("my-resource", "GitHub GraphQL", "20250917", null, null);
+        ServiceRef ref = reconciler.getServiceRef(resources);
         assertNotNull(ref);
         assertEquals("GitHub GraphQL", ref.getName());
         assertEquals("20250917", ref.getVersion());
@@ -112,19 +113,19 @@ class ResourceReconcilerTest {
 
     @Test
     void getServiceRef_returnsNull_whenSpecIsNull() {
-        Resource resource = new Resource();
+        Resources resources = new Resources();
         ObjectMeta meta = new ObjectMeta();
         meta.setName("empty");
-        resource.setMetadata(meta);
-        assertNull(reconciler.getServiceRef(resource));
+        resources.setMetadata(meta);
+        assertNull(reconciler.getServiceRef(resources));
     }
 
     // ── artifact name ─────────────────────────────────────────────────────────
 
     @Test
     void getArtifactName_returnsMetadataName() {
-        Resource resource = buildResource("github-api-resources-01", "svc", "v1", null, null);
-        assertEquals("github-api-resources-01", reconciler.getArtifactName(resource));
+        Resources resources = buildResources("github-api-resources-01", "svc", "v1", null, null);
+        assertEquals("github-api-resources-01", reconciler.getArtifactName(resources));
     }
 
     // ── artifact content — resources ──────────────────────────────────────────
@@ -134,12 +135,12 @@ class ResourceReconcilerTest {
         Map<String, ResourceItem> resources = new LinkedHashMap<>();
         resources.put("file:///users/{login}", buildResourceItem("user-profile", "A GitHub user", "Hello"));
 
-        Resource resource = buildResource("res-01", "GitHub GraphQL", "20250917", resources, null);
-        String json = reconciler.getArtifactContent(resource);
+        Resources resourcesCR = buildResources("res-01", "GitHub GraphQL", "20250917", resources, null);
+        String json = reconciler.getArtifactContent(resourcesCR);
         JsonNode root = objectMapper.readTree(json);
 
         assertEquals("reshapr.io/v1alpha1", root.get("apiVersion").asText());
-        assertEquals("Resource", root.get("kind").asText());
+        assertEquals("Resources", root.get("kind").asText());
         assertEquals("GitHub GraphQL", root.get("service").get("name").asText());
 
         JsonNode resourcesNode = root.get("resources");
@@ -157,8 +158,8 @@ class ResourceReconcilerTest {
         Map<String, ResourceTemplateItem> templates = new LinkedHashMap<>();
         templates.put("file:///repos/{owner}/{repo}", buildTemplateItem("repo-template", "A GitHub repo template"));
 
-        Resource resource = buildResource("res-02", "GitHub GraphQL", "20250917", null, templates);
-        String json = reconciler.getArtifactContent(resource);
+        Resources resources = buildResources("res-02", "GitHub GraphQL", "20250917", null, templates);
+        String json = reconciler.getArtifactContent(resources);
         JsonNode root = objectMapper.readTree(json);
 
         JsonNode templatesNode = root.get("resourceTemplates");
@@ -181,7 +182,7 @@ class ResourceReconcilerTest {
         item.setMimeType("text/plain");
 
         Map<String, ResourceItem> resources = Map.of("file:///annotated", item);
-        Resource resource = buildResource("res-03", "svc", "v1", resources, null);
+        Resources resource = buildResources("res-03", "svc", "v1", resources, null);
         String json = reconciler.getArtifactContent(resource);
         JsonNode root = objectMapper.readTree(json);
 
@@ -195,8 +196,8 @@ class ResourceReconcilerTest {
 
     @Test
     void getArtifactContent_omitsNullFields() throws Exception {
-        Resource resource = buildResource("res-04", "My Service", "1.0", null, null);
-        String json = reconciler.getArtifactContent(resource);
+        Resources resources = buildResources("res-04", "My Service", "1.0", null, null);
+        String json = reconciler.getArtifactContent(resources);
         JsonNode root = objectMapper.readTree(json);
         assertFalse(root.has("resources"));
         assertFalse(root.has("resourceTemplates"));
@@ -206,10 +207,10 @@ class ResourceReconcilerTest {
 
     @Test
     void updateStatus_setsAllFields() {
-        Resource resource = buildResource("res-05", "svc", "v1", null, null);
-        reconciler.updateStatus(resource, "svc-123", "art-456", Status.READY, "Synchronized");
+        Resources resources = buildResources("res-05", "svc", "v1", null, null);
+        reconciler.updateStatus(resources, "svc-123", "art-456", Status.READY, "Synchronized");
 
-        ResourceStatus status = resource.getStatus();
+        ResourcesStatus status = resources.getStatus();
         assertNotNull(status);
         assertEquals(Status.READY, status.getState());
         assertEquals("svc-123", status.getServiceId());
@@ -219,11 +220,11 @@ class ResourceReconcilerTest {
 
     @Test
     void updateStatus_doesNotOverwrite_whenFieldsAreNull() {
-        Resource resource = buildResource("res-06", "svc", "v1", null, null);
-        reconciler.updateStatus(resource, "svc-123", "art-456", Status.READY, "OK");
-        reconciler.updateStatus(resource, null, null, null, null);
+        Resources resources = buildResources("res-06", "svc", "v1", null, null);
+        reconciler.updateStatus(resources, "svc-123", "art-456", Status.READY, "OK");
+        reconciler.updateStatus(resources, null, null, null, null);
 
-        ResourceStatus status = resource.getStatus();
+        ResourcesStatus status = resources.getStatus();
         assertEquals("svc-123", status.getServiceId());
         assertEquals("art-456", status.getArtifactId());
         assertEquals(Status.READY, status.getState());

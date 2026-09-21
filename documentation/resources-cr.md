@@ -1,8 +1,8 @@
-# Resource Custom Resource
+# Resources Custom Resource
 
 ## Overview
 
-The `Resource` Custom Resource (CR) allows you to attach one or more **resources** and
+The `Resources` Custom Resource (CR) allows you to attach one or more **resources** and
 **resource templates** to an existing reShapr [Service](./service-cr.md). Resources are static
 or remote content items (text, binary blobs, remote URIs) that the reShapr control plane exposes
 alongside the Service as `RESHAPR_RESOURCES` artifacts — typically consumed by MCP clients.
@@ -15,17 +15,17 @@ Two families of items can be declared:
   the control plane can materialize at runtime. Templates only carry metadata (name, title,
   description, MIME type, icons, annotations) — no content.
 
-The `Resource` CRD is defined using the `reshapr.io/v1alpha1` API version. The full schema
+The `Resources` CRD is defined using the `reshapr.io/v1alpha1` API version. The full schema
 definition is available in
 [`resources.reshapr.io-v1.yml`](../deploy/crd/resources.reshapr.io-v1.yml).
 
-At a higher level, a `Resource` resource is organized using the following structure:
+At a higher level, a `Resources` resources is organized using the following structure:
 
 ```yaml
 apiVersion: reshapr.io/v1alpha1
-kind: Resource
+kind: Resources
 metadata:
-  name: open-meteo-gitops-resource
+  name: open-meteo-gitops-resources
   annotations:
     reshapr.io/instance: reshapr-control-plane-ctrl.reshapr-system
     reshapr.io/organization: reshapr
@@ -47,23 +47,23 @@ At least one of `spec.resources` or `spec.resourceTemplates` must be present.
 The instance-targeting annotations (`reshapr.io/instance`, `reshapr.io/organization`) are
 mandatory — see the [Instance connection flow](./instance-connection.md) for details.
 
-Once created in your namespace, you can list existing resource attachments with:
+Once created in your namespace, you can list existing resources attachments with:
 
 ```sh
 $ kubectl get resources.reshapr.io -n my-ns
 NAME                          AGE
-open-meteo-gitops-resource     1d
+open-meteo-gitops-resources     1d
 ```
 
-You can also use the short name `rsrc`.
+You can also use the short name `res`.
 
 ## Status structure
 
 ```yaml
 apiVersion: reshapr.io/v1alpha1
-kind: Resource
+kind: Resources
 metadata:
-  name: open-meteo-gitops-resource
+  name: open-meteo-gitops-resources
 spec:
   [...]
 status:
@@ -85,8 +85,8 @@ status:
 | Property            | Description                                                                                                                                                            |
 |---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `service`           | **Mandatory**. Reference to the target Service — see _Service reference_ below.                                                                                        |
-| `resources`         | **Optional**. Map of URI → [_Resource item_](#resource-item-specification). At least one of `resources` or `resourceTemplates` must be present.                         |
-| `resourceTemplates` | **Optional**. Map of URI template → [_Resource template item_](#resource-template-item-specification). At least one of `resources` or `resourceTemplates` must be present. |
+| `resources`         | **Optional**. Map of URI → [_Resource item_](#resources-item-specification). At least one of `resources` or `resourceTemplates` must be present.                         |
+| `resourceTemplates` | **Optional**. Map of URI template → [_Resource template item_](#resources-template-item-specification). At least one of `resources` or `resourceTemplates` must be present. |
 
 ### Service reference (`spec.service`)
 
@@ -98,19 +98,19 @@ status:
 ### Resource item specification
 
 Each entry under `spec.resources` follows this schema. The map key is the URI identifying the
-resource (e.g. `file:///docs/getting-started.md`, `https://example.com/logo.png`).
+resources (e.g. `file:///docs/getting-started.md`, `https://example.com/logo.png`).
 
 | Property         | Description                                                                                                                                                                    |
 |------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `name`           | **Mandatory**. Name of the resource.                                                                                                                                            |
-| `title`          | **Optional**. Human-readable title of the resource.                                                                                                                             |
-| `description`    | **Optional**. Human-readable long description of the resource.                                                                                                                  |
-| `mimeType`       | **Optional**. MIME type of the resource content (e.g. `text/markdown`, `application/json`, `image/png`).                                                                        |
-| `size`           | **Optional**. Size of the resource content in bytes.                                                                                                                            |
+| `name`           | **Mandatory**. Name of the resources.                                                                                                                                            |
+| `title`          | **Optional**. Human-readable title of the resources.                                                                                                                             |
+| `description`    | **Optional**. Human-readable long description of the resources.                                                                                                                  |
+| `mimeType`       | **Optional**. MIME type of the resources content (e.g. `text/markdown`, `application/json`, `image/png`).                                                                        |
+| `size`           | **Optional**. Size of the resources content in bytes.                                                                                                                            |
 | `text`           | **Optional / exclusive**. Inlined textual content. Mutually exclusive with `blob` and `remoteContent`.                                                                          |
 | `blob`           | **Optional / exclusive**. Base64-encoded binary content. Mutually exclusive with `text` and `remoteContent`.                                                                    |
 | `remoteContent`  | **Optional / exclusive**. Remote URI from which the control plane can fetch the content. Mutually exclusive with `text` and `blob`.                                             |
-| `icons`          | **Optional**. List of [icon entries](#icon-entry) associated with this resource.                                                                                                |
+| `icons`          | **Optional**. List of [icon entries](#icon-entry) associated with this resources.                                                                                                |
 | `annotations`    | **Optional**. Additional [annotations](#annotations) (audience, priority, last modified date).                                                                                  |
 
 > [!NOTE]
@@ -124,9 +124,9 @@ Each entry under `spec.resourceTemplates` follows this schema. The map key is th
 
 | Property       | Description                                                                                       |
 |----------------|---------------------------------------------------------------------------------------------------|
-| `name`         | **Mandatory**. Name of the resource template.                                                     |
-| `title`        | **Optional**. Human-readable title of the resource template.                                      |
-| `description`  | **Optional**. Human-readable long description of the resource template.                           |
+| `name`         | **Mandatory**. Name of the resources template.                                                     |
+| `title`        | **Optional**. Human-readable title of the resources template.                                      |
+| `description`  | **Optional**. Human-readable long description of the resources template.                           |
 | `mimeType`     | **Optional**. MIME type of the resources materialized from this template.                         |
 | `icons`        | **Optional**. List of [icon entries](#icon-entry) associated with this template.                  |
 | `annotations`  | **Optional**. Additional [annotations](#annotations) (audience, priority, last modified date).    |
@@ -143,17 +143,17 @@ Each entry under `spec.resourceTemplates` follows this schema. The map key is th
 
 | Property        | Description                                                                                       |
 |-----------------|---------------------------------------------------------------------------------------------------|
-| `audience`      | **Optional**. Intended audiences for this resource — typically `user`, `assistant`, or both.      |
-| `priority`      | **Optional**. Importance of this resource, from `0.0` (least) to `1.0` (most).                    |
+| `audience`      | **Optional**. Intended audiences for this resources — typically `user`, `assistant`, or both.      |
+| `priority`      | **Optional**. Importance of this resources, from `0.0` (least) to `1.0` (most).                    |
 | `lastModified`  | **Optional**. Last modified date-time in ISO 8601 format.                                         |
 
 ## Complete example
 
 ```yaml
 apiVersion: reshapr.io/v1alpha1
-kind: Resource
+kind: Resources
 metadata:
-  name: open-meteo-gitops-resource
+  name: open-meteo-gitops-resources
   namespace: default
   annotations:
     reshapr.io/instance: reshapr-control-plane-ctrl.reshapr-system

@@ -42,7 +42,7 @@ decisions.
 > `reshapr-system` namespace. If it is not yet the case, deploy it first using the Helm charts
 > available at [reshaprio/reshapr-helm-charts](https://github.com/reshaprio/reshapr-helm-charts).
 
-Install the CRDs, the operator and a sample resource on a Kubernetes cluster:
+Install the CRDs, the operator and a sample resources on a Kubernetes cluster:
 
 ```sh
 kubectl apply -f deploy/crd/
@@ -65,7 +65,7 @@ For the full installation guide (operator + admission webhook), see
 User-facing documentation lives under the [`documentation/`](./documentation/README.md) folder.
 It covers installation, the instance connection flow, the admission controller and a reference
 for each Custom Resource (`Service`, `GatewayGroup`, `ConfigurationPlan`, `Exposition`,
-`SecretSource`, `CustomTools`, `Resource`).
+`SecretSource`, `CustomTools`, `Resources`).
 
 ## License
 
