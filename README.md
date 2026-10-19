@@ -20,9 +20,9 @@ This repository provides three complementary Kubernetes components:
 
 ## Build Status
 
-Latest release version is `0.0.3`.
+Latest release version is `0.0.4`.
 
-Current development version is `0.0.4-SNAPSHOT`.
+Current development version is `0.0.5-SNAPSHOT`.
 
 ## Compatibility
 
