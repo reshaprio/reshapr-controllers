@@ -34,6 +34,7 @@ extend a running reShapr **control plane** with a Kubernetes-native experience:
 | [`SecretSource`](./secretsource-cr.md)             | Namespaced | Declare Secrets in the control plane, optionally sourced from Kubernetes Secrets. |
 | [`CustomTools`](./customtools-cr.md)               | Namespaced | Attach declarative or scripted custom tools to an existing Service.         |
 | [`Resources`](./resources-cr.md)                     | Namespaced | Attach static/remote resources and resources templates to an existing Service. |
+| [`Prompts`](./prompts-cr.md)                         | Namespaced | Attach prompt templates to an existing Service.                             |
 
 ### Admission webhook
 

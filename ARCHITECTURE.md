@@ -18,7 +18,7 @@ controllers can do anything useful.
 Concretely, this repo ships three complementary building blocks:
 
 * **CRDs + Java API library** modelling reShapr concepts (`Service`, `GatewayGroup`,
-  `ConfigurationPlan`, `Exposition`, `SecretSource`, `CustomTools`) as first-class Kubernetes
+  `ConfigurationPlan`, `Exposition`, `SecretSource`, `CustomTools`, `Resources`, `Prompts`) as first-class Kubernetes
   objects.
 * **A Kubernetes Operator** that watches these CRs and reconciles them against the reShapr
   control plane through its public REST API.
