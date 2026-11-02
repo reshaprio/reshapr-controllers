@@ -90,6 +90,11 @@ public class CustomToolsReconciler extends BaseArtifactReconciler<CustomTools> {
    }
 
    @Override
+   protected boolean isKeepOnDelete(CustomTools resource) {
+      return resource.getSpec() != null && resource.getSpec().isKeepOnDelete();
+   }
+
+   @Override
    protected void updateStatus(CustomTools resource, String serviceId, String artifactId, Status status, String message) {
       CustomToolsStatus s = resource.getStatus();
       if (s == null) {

@@ -30,7 +30,7 @@ import java.util.Map;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "service", "prompts" })
+@JsonPropertyOrder({ "service", "prompts", "keepOnDelete" })
 @Buildable(editableEnabled = false, builderPackage = "io.fabric8.kubernetes.api.builder")
 public class PromptsSpec {
 
@@ -39,6 +39,9 @@ public class PromptsSpec {
 
     @JsonPropertyDescription("The prompts are defined with name as key.")
     private Map<String, PromptItem> prompts;
+
+    @JsonPropertyDescription("Flag to keep artifact in control plane when deleting this resource. Default is false.")
+    private boolean keepOnDelete = false;
 
     public ServiceRef getService() {
         return service;
@@ -54,5 +57,13 @@ public class PromptsSpec {
 
     public void setPrompts(Map<String, PromptItem> prompts) {
         this.prompts = prompts;
+    }
+
+    public boolean isKeepOnDelete() {
+        return keepOnDelete;
+    }
+
+    public void setKeepOnDelete(boolean keepOnDelete) {
+        this.keepOnDelete = keepOnDelete;
     }
 }

@@ -161,5 +161,21 @@ class PromptsReconcilerTest {
          verify(mockedApi).deleteArtifact("art-123");
       }
    }
+
+   @Test
+   void testCleanup_honorsKeepOnDelete() throws Exception {
+      ReshaprApiClientFactory factory = mock(ReshaprApiClientFactory.class);
+      PromptsReconciler customReconciler = new PromptsReconciler(factory, null, objectMapper);
+      Prompts prompts = buildPrompts();
+      prompts.getSpec().setKeepOnDelete(true);
+      customReconciler.updateStatus(prompts, "svc-1", "art-123", Status.READY, "ok");
+
+      try (MockedConstruction<DefaultApi> mocked = Mockito.mockConstruction(DefaultApi.class)) {
+         DeleteControl control = customReconciler.cleanup(prompts, null);
+
+         assertTrue(control.isRemoveFinalizer());
+         assertEquals(0, mocked.constructed().size(), "DefaultApi should not be initialized when keepOnDelete is true");
+      }
+   }
 }
 

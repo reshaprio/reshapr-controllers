@@ -57,11 +57,17 @@ public abstract class BaseArtifactReconciler<R extends CustomResource<?, ?>> ext
    protected abstract String getArtifactContent(R resource) throws Exception;
    protected abstract String getArtifactName(R resource);
    protected abstract String getArtifactId(R resource);
+   protected abstract boolean isKeepOnDelete(R resource);
    protected abstract void updateStatus(R resource, String serviceId, String artifactId, Status status, String message);
 
    @Override
    public DeleteControl cleanup(R resource, Context<R> context) {
       String name = resource.getMetadata().getName();
+
+      if (isKeepOnDelete(resource)) {
+         logger.infof("'keepOnDelete' is set for resource '%s' — leaving control plane Artifact in place", name);
+         return DeleteControl.defaultDelete();
+      }
 
       try {
          ApiClient apiClient = authenticatedClientFor(resource);

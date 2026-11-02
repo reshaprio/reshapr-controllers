@@ -93,6 +93,11 @@ public class PromptsReconciler extends BaseArtifactReconciler<Prompts> {
    }
 
    @Override
+   protected boolean isKeepOnDelete(Prompts resource) {
+      return resource.getSpec() != null && resource.getSpec().isKeepOnDelete();
+   }
+
+   @Override
    protected void updateStatus(Prompts resource, String serviceId, String artifactId, Status status, String message) {
       PromptsStatus s = resource.getStatus();
       if (s == null) {

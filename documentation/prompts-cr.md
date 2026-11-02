@@ -47,10 +47,11 @@ mandatory — see the [Instance connection flow](./instance-connection.md). The 
 
 ## Specification details
 
-| Property  | Description                                                                          |
-|-----------|--------------------------------------------------------------------------------------|
-| `service` | **Mandatory**. Target Service reference (`name` and `version`).                      |
-| `prompts` | Map of prompt name → prompt item (see below).                                        |
+| Property       | Description                                                                          |
+|----------------|--------------------------------------------------------------------------------------|
+| `service`      | **Mandatory**. Target Service reference (`name` and `version`).                      |
+| `prompts`      | Map of prompt name → prompt item (see below).                                        |
+| `keepOnDelete` | **Optional**. When `true`, deleting the CR keeps the artifact in the control plane. Defaults to `false`. |
 
 ### Prompt item
 

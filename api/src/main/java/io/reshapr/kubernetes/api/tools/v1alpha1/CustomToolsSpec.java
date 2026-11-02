@@ -30,7 +30,7 @@ import java.util.Map;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "service", "customTools" })
+@JsonPropertyOrder({ "service", "customTools", "keepOnDelete" })
 @Buildable(editableEnabled = false, builderPackage = "io.fabric8.kubernetes.api.builder")
 public class CustomToolsSpec {
 
@@ -39,6 +39,9 @@ public class CustomToolsSpec {
 
     @JsonPropertyDescription("The custom tools are defined with name as key.")
     private Map<String, CustomToolItem> customTools;
+
+    @JsonPropertyDescription("Flag to keep artifact in control plane when deleting this resource. Default is false.")
+    private boolean keepOnDelete = false;
 
     public ServiceRef getService() {
         return service;
@@ -54,5 +57,13 @@ public class CustomToolsSpec {
 
     public void setCustomTools(Map<String, CustomToolItem> customTools) {
         this.customTools = customTools;
+    }
+
+    public boolean isKeepOnDelete() {
+        return keepOnDelete;
+    }
+
+    public void setKeepOnDelete(boolean keepOnDelete) {
+        this.keepOnDelete = keepOnDelete;
     }
 }
