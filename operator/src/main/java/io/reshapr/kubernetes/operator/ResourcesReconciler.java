@@ -96,6 +96,11 @@ public class ResourcesReconciler extends BaseArtifactReconciler<Resources> {
    }
 
    @Override
+   protected boolean isKeepOnDelete(Resources resources) {
+      return resources.getSpec() != null && resources.getSpec().isKeepOnDelete();
+   }
+
+   @Override
    protected void updateStatus(Resources resources, String serviceId, String artifactId, Status status, String message) {
       ResourcesStatus s = resources.getStatus();
       if (s == null) {

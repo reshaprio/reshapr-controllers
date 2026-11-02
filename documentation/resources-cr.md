@@ -87,6 +87,7 @@ status:
 | `service`           | **Mandatory**. Reference to the target Service — see _Service reference_ below.                                                                                        |
 | `resources`         | **Optional**. Map of URI → [_Resource item_](#resources-item-specification). At least one of `resources` or `resourceTemplates` must be present.                         |
 | `resourceTemplates` | **Optional**. Map of URI template → [_Resource template item_](#resources-template-item-specification). At least one of `resources` or `resourceTemplates` must be present. |
+| `keepOnDelete`      | **Optional**. When `true`, deleting the CR keeps the artifact in the control plane. Defaults to `false`.                                                               |
 
 ### Service reference (`spec.service`)
 

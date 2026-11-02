@@ -78,6 +78,7 @@ status:
 |----------------|------------------------------------------------------------------------------------------------------|
 | `service`      | **Mandatory**. Reference to the target Service — see _Service reference_ below.                      |
 | `customTools`  | **Mandatory**. Map of tool name → [_Custom tool item_](#custom-tool-item-specification).             |
+| `keepOnDelete` | **Optional**. When `true`, deleting the CR keeps the artifact in the control plane. Defaults to `false`. |
 
 ### Service reference (`spec.service`)
 

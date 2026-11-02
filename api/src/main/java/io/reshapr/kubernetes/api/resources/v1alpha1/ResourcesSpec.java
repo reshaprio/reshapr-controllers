@@ -36,7 +36,7 @@ import java.util.Map;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "service", "resources", "resourceTemplates" })
+@JsonPropertyOrder({ "service", "resources", "resourceTemplates", "keepOnDelete" })
 @Buildable(editableEnabled = false, builderPackage = "io.fabric8.kubernetes.api.builder")
 public class ResourcesSpec {
 
@@ -48,6 +48,9 @@ public class ResourcesSpec {
 
     @JsonPropertyDescription("The resource template definitions, keyed by URI template.")
     private Map<String, ResourceTemplateItem> resourceTemplates;
+
+    @JsonPropertyDescription("Flag to keep artifact in control plane when deleting this resource. Default is false.")
+    private boolean keepOnDelete = false;
 
     public ServiceRef getService() {
         return service;
@@ -71,5 +74,13 @@ public class ResourcesSpec {
 
     public void setResourceTemplates(Map<String, ResourceTemplateItem> resourceTemplates) {
         this.resourceTemplates = resourceTemplates;
+    }
+
+    public boolean isKeepOnDelete() {
+        return keepOnDelete;
+    }
+
+    public void setKeepOnDelete(boolean keepOnDelete) {
+        this.keepOnDelete = keepOnDelete;
     }
 }
