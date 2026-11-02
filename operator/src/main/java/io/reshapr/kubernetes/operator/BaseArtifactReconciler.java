@@ -26,14 +26,19 @@ import io.reshapr.kubernetes.operator.auth.ReshaprApiClientFactory;
 import io.reshapr.kubernetes.operator.client.ArtifactAttachClient;
 
 import io.fabric8.kubernetes.client.CustomResource;
+import io.javaoperatorsdk.operator.api.reconciler.Cleaner;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
+import io.javaoperatorsdk.operator.api.reconciler.DeleteControl;
 import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
+import io.reshapr.kubernetes.operator.auth.ReshaprAuthenticationException;
 import org.jboss.logging.Logger;
+
+import java.util.List;
 
 /**
  * Abstract reconciler for GitOps synchronization of Artifacts (like CustomTools, Prompts).
  */
-public abstract class BaseArtifactReconciler<R extends CustomResource<?, ?>> extends BaseReshaprReconciler<R> {
+public abstract class BaseArtifactReconciler<R extends CustomResource<?, ?>> extends BaseReshaprReconciler<R> implements Cleaner<R> {
 
    private static final Logger logger = Logger.getLogger(BaseArtifactReconciler.class);
 
@@ -51,7 +56,60 @@ public abstract class BaseArtifactReconciler<R extends CustomResource<?, ?>> ext
    protected abstract ArtifactType getArtifactType();
    protected abstract String getArtifactContent(R resource) throws Exception;
    protected abstract String getArtifactName(R resource);
+   protected abstract String getArtifactId(R resource);
    protected abstract void updateStatus(R resource, String serviceId, String artifactId, Status status, String message);
+
+   @Override
+   public DeleteControl cleanup(R resource, Context<R> context) {
+      String name = resource.getMetadata().getName();
+
+      try {
+         ApiClient apiClient = authenticatedClientFor(resource);
+         if (apiClient == null) {
+            logger.warnf("Missing reShapr annotations on resource '%s' — cannot delete control plane Artifact, removing finalizer", name);
+            return DeleteControl.defaultDelete();
+         }
+         DefaultApi api = new DefaultApi(apiClient);
+
+         String artifactId = getArtifactId(resource);
+         if (artifactId == null) {
+            ServiceRef serviceRef = getServiceRef(resource);
+            if (serviceRef != null && serviceRef.getName() != null) {
+               io.reshapr.client.model.Service remoteService = findRemoteService(api, serviceRef.getName(), serviceRef.getVersion());
+               if (remoteService != null) {
+                  List<Artifact> artifacts = api.getArtifactsByServiceId(remoteService.getId());
+                  if (artifacts != null) {
+                     String artifactName = getArtifactName(resource);
+                     for (Artifact a : artifacts) {
+                        if (artifactName.equals(a.getName())) {
+                           artifactId = a.getId();
+                           break;
+                        }
+                     }
+                  }
+               }
+            }
+         }
+
+         if (artifactId != null) {
+            api.deleteArtifact(artifactId);
+            logger.infof("Deleted control plane Artifact id=%s for resource '%s'", artifactId, name);
+         } else {
+            logger.infof("No control plane Artifact to delete for resource '%s'", name);
+         }
+         return DeleteControl.defaultDelete();
+      } catch (ReshaprAuthenticationException e) {
+         logger.errorf(e, "Authentication failed while deleting control plane Artifact for '%s' — retrying", name);
+         return DeleteControl.noFinalizerRemoval().rescheduleAfter(RETRY_DELAY_MS);
+      } catch (ApiException e) {
+         if (e.getCode() == 404) {
+            logger.infof("Control plane Artifact for '%s' already deleted (HTTP 404) — removing finalizer", name);
+            return DeleteControl.defaultDelete();
+         }
+         logger.errorf(e, "Control plane error while deleting Artifact for '%s' — retrying", name);
+         return DeleteControl.noFinalizerRemoval().rescheduleAfter(RETRY_DELAY_MS);
+      }
+   }
 
    @Override
    protected UpdateControl<R> doReconcile(R resource, Context<R> context, ApiClient apiClient) {

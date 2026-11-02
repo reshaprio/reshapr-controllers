@@ -85,6 +85,11 @@ public class CustomToolsReconciler extends BaseArtifactReconciler<CustomTools> {
    }
 
    @Override
+   protected String getArtifactId(CustomTools resource) {
+      return resource.getStatus() != null ? resource.getStatus().getArtifactId() : null;
+   }
+
+   @Override
    protected void updateStatus(CustomTools resource, String serviceId, String artifactId, Status status, String message) {
       CustomToolsStatus s = resource.getStatus();
       if (s == null) {
