@@ -26,12 +26,26 @@ import io.reshapr.kubernetes.api.prompts.v1alpha1.PromptsSpec;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.javaoperatorsdk.operator.api.reconciler.Cleaner;
+import io.javaoperatorsdk.operator.api.reconciler.DeleteControl;
+import io.reshapr.client.ApiClient;
+import io.reshapr.client.ApiException;
+import io.reshapr.client.api.DefaultApi;
+import io.reshapr.kubernetes.operator.auth.ReshaprAnnotations;
+import io.reshapr.kubernetes.operator.auth.ReshaprApiClientFactory;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedConstruction;
+import org.mockito.Mockito;
 
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link PromptsReconciler}.
@@ -94,4 +108,58 @@ class PromptsReconcilerTest {
       assertEquals("art", prompts.getStatus().getArtifactId());
       assertEquals("ok", prompts.getStatus().getMessage());
    }
+
+   @Test
+   void testReconcilerImplementsCleanerForArtifactDeletion() {
+      assertTrue(Cleaner.class.isAssignableFrom(PromptsReconciler.class),
+            "PromptsReconciler must implement Cleaner to delete artifacts from control plane on CR deletion");
+   }
+
+   @Test
+   void testCleanup_deletesArtifactWhenPresent() throws Exception {
+      ReshaprApiClientFactory factory = mock(ReshaprApiClientFactory.class);
+      ApiClient apiClient = mock(ApiClient.class);
+      when(factory.createAuthenticatedApiClient(any(), any())).thenReturn(apiClient);
+
+      PromptsReconciler customReconciler = new PromptsReconciler(factory, null, objectMapper);
+      Prompts prompts = buildPrompts();
+      prompts.getMetadata().setAnnotations(Map.of(
+            ReshaprAnnotations.INSTANCE, "reshapr-ctrl.reshapr-system",
+            ReshaprAnnotations.ORGANIZATION, "reshapr"
+      ));
+      customReconciler.updateStatus(prompts, "svc-1", "art-123", Status.READY, "ok");
+
+      try (MockedConstruction<DefaultApi> mocked = Mockito.mockConstruction(DefaultApi.class)) {
+         DeleteControl control = customReconciler.cleanup(prompts, null);
+
+         assertTrue(control.isRemoveFinalizer());
+         DefaultApi mockedApi = mocked.constructed().get(0);
+         verify(mockedApi).deleteArtifact("art-123");
+      }
+   }
+
+   @Test
+   void testCleanup_handles404Cleanly() throws Exception {
+      ReshaprApiClientFactory factory = mock(ReshaprApiClientFactory.class);
+      ApiClient apiClient = mock(ApiClient.class);
+      when(factory.createAuthenticatedApiClient(any(), any())).thenReturn(apiClient);
+
+      PromptsReconciler customReconciler = new PromptsReconciler(factory, null, objectMapper);
+      Prompts prompts = buildPrompts();
+      prompts.getMetadata().setAnnotations(Map.of(
+            ReshaprAnnotations.INSTANCE, "reshapr-ctrl.reshapr-system",
+            ReshaprAnnotations.ORGANIZATION, "reshapr"
+      ));
+      customReconciler.updateStatus(prompts, "svc-1", "art-123", Status.READY, "ok");
+
+      try (MockedConstruction<DefaultApi> mocked = Mockito.mockConstruction(DefaultApi.class,
+            (mock, ctx) -> doThrow(new ApiException(404, "Not Found")).when(mock).deleteArtifact("art-123"))) {
+         DeleteControl control = customReconciler.cleanup(prompts, null);
+
+         assertTrue(control.isRemoveFinalizer());
+         DefaultApi mockedApi = mocked.constructed().get(0);   
+         verify(mockedApi).deleteArtifact("art-123");
+      }
+   }
 }
+
