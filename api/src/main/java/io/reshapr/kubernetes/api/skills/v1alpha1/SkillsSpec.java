@@ -19,18 +19,16 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import io.fabric8.generator.annotation.Required;
-import io.fabric8.generator.annotation.Size;
-import io.fabric8.generator.annotation.ValidationRule;
 import io.reshapr.kubernetes.api.model.ServiceRef;
 import io.sundr.builder.annotations.Buildable;
 
 import java.util.Map;
 
 /**
- * This the {@code specification} of a {@link Skills} custom resource. Validation constraints mirror the
- * control plane {@code Skills-v1alpha1} schema so that invalid resources are rejected by the Kubernetes
- * API server before reaching the control plane.
+ * This is the {@code specification} of a {@link Skills} custom resource.
+ * It holds a reference to a Service and a map of skill definitions that will
+ * be attached as a {@code RESHAPR_SKILLS} artifact in the control plane.
+ *
  * @author vaishnav
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -40,14 +38,9 @@ import java.util.Map;
 public class SkillsSpec {
 
     @JsonPropertyDescription("Holds reference information about the Service these skills relate to.")
-    @Required
     private ServiceRef service;
 
     @JsonPropertyDescription("The skills are defined with the skill name as key. The name must match the 'name' of the SKILL.md frontmatter.")
-    @Required
-    @Size(min = 1)
-    @ValidationRule(value = "self.all(k, k.matches('^[a-z0-9]+(-[a-z0-9]+)*$'))",
-          message = "skill names must be lowercase alphanumeric words separated by single hyphens")
     private Map<String, SkillItem> skills;
 
     @JsonPropertyDescription("Flag to keep artifact in control plane when deleting this resource. Default is false.")

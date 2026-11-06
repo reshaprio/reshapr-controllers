@@ -22,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.fabric8.crd.generator.annotation.PreserveUnknownFields;
 import io.fabric8.crd.generator.annotation.SchemaFrom;
-import io.fabric8.generator.annotation.Pattern;
 import io.fabric8.generator.annotation.Required;
 import io.sundr.builder.annotations.Buildable;
 
@@ -44,11 +43,9 @@ public class SkillItem {
 
     @JsonPropertyDescription("The remote HTTP(S) URL of the skill directory (the one holding SKILL.md).")
     @Required
-    @Pattern("^https?://")
     private String remoteContent;
 
     @JsonPropertyDescription("Optional organizational prefix of the skill URI, without leading or trailing slash (e.g. 'acme/billing').")
-    @Pattern("^[^/\\s]+(/[^/\\s]+)*$")
     private String path;
 
     @JsonPropertyDescription("Supporting files of the skill, as paths relative to the skill directory (SKILL.md is implicit).")

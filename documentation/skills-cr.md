@@ -63,11 +63,10 @@ A complete sample is available in
 | Property       | Description                                                                          |
 |----------------|--------------------------------------------------------------------------------------|
 | `service`      | **Mandatory**. Target Service reference (`name` and `version`).                      |
-| `skills`       | **Mandatory**. Map of skill name → skill item (see below). Must contain at least one skill. |
+| `skills`       | Map of skill name → skill item (see below).                                          |
 | `keepOnDelete` | **Optional**. When `true`, deleting the CR keeps the artifact in the control plane. Defaults to `false`. |
 
-Skill names (the map keys) must be lowercase alphanumeric words separated by single hyphens
-(e.g. `open-meteo-forecast`) and must match the `name` declared in the `SKILL.md` frontmatter.
+Skill names (the map keys) must match the `name` declared in the `SKILL.md` frontmatter.
 
 ### Skill item
 
@@ -77,12 +76,4 @@ Skill names (the map keys) must be lowercase alphanumeric words separated by sin
 | `path`          | **Optional**. Organizational prefix of the skill URI, without leading or trailing slash (e.g. `acme/billing`). |
 | `files`         | **Optional**. Supporting files, as paths relative to the skill directory. `SKILL.md` is implicit and must not be listed. |
 | `_meta`         | **Optional**. Free-form metadata attached to the `SKILL.md` resource.               |
-
-## Validation
-
-Basic checks are done by the Kubernetes API server when the CR is applied: mandatory fields,
-skill name format, `remoteContent` starting with `http://` or `https://`, and `path` format.
-The full [Skills schema](https://github.com/reshaprio/reshapr/blob/main/control-plane/src/main/resources/schemas/Skills-v1alpha1-schema.json)
-is then enforced by the control plane during import; any error is reported in `status.state` and
-`status.message`.
 
