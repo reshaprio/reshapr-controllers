@@ -1,0 +1,18 @@
+apiVersion: reshapr.io/v1alpha1
+kind: Skills
+metadata:
+  name: open-meteo-gitops-skills
+  annotations:
+    reshapr.io/instance: reshapr-control-plane-ctrl.reshapr-system
+    reshapr.io/organization: reshapr
+spec:
+  service:
+    name: open-meteo-api
+    version: '1.0'
+  skills:
+    # The skill directory (SKILL.md + supporting files) must be reachable over HTTP(S) by the gateway.
+    open-meteo-forecast:
+      remoteContent: http://skills-server.reshapr-system:3040/open-meteo-forecast
+      files:
+        - references/VARIABLES.md
+

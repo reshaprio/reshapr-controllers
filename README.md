@@ -29,6 +29,7 @@ Current development version is `0.0.5-SNAPSHOT`.
 | reShapr control plane | Minimum reshapr-controllers version |
 |-----------------------|-------------------------------------|
 | `1.1`                 | `0.0.4`                             |
+| `1.2`                 | `0.0.5`                             |
 
 ## How it works
 
@@ -71,7 +72,7 @@ For the full installation guide (operator + admission webhook), see
 User-facing documentation lives under the [`documentation/`](./documentation/README.md) folder.
 It covers installation, the instance connection flow, the admission controller and a reference
 for each Custom Resource (`Service`, `GatewayGroup`, `ConfigurationPlan`, `Exposition`,
-`SecretSource`, `CustomTools`, `Resources`, `Prompts`).
+`SecretSource`, `CustomTools`, `Resources`, `Prompts`, `Skills`).
 
 ## License
 

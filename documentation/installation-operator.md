@@ -10,7 +10,7 @@ This page describes how to install the reShapr Operator components on a Kubernet
 
 ## 1. Install the Custom Resource Definitions
 
-The four CRDs shipped by this repository are located under [`deploy/crd/`](../deploy/crd/):
+The CRDs shipped by this repository are located under [`deploy/crd/`](../deploy/crd/):
 
 ```sh
 kubectl apply -f deploy/crd/services.reshapr.io-v1.yml
@@ -19,6 +19,9 @@ kubectl apply -f deploy/crd/configurationplans.reshapr.io-v1.yml
 kubectl apply -f deploy/crd/customtools.reshapr.io-v1.yml
 kubectl apply -f deploy/crd/expositions.reshapr.io-v1.yml
 kubectl apply -f deploy/crd/secretsources.reshapr.io-v1.yml
+kubectl apply -f deploy/crd/resources.reshapr.io-v1.yml
+kubectl apply -f deploy/crd/prompts.reshapr.io-v1.yml
+kubectl apply -f deploy/crd/skills.reshapr.io-v1.yml
 ```
 
 You can verify the installation with:
