@@ -44,6 +44,7 @@ import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
 import java.util.Map;
+import java.util.Objects;
 
 import static io.javaoperatorsdk.operator.api.reconciler.Constants.WATCH_ALL_NAMESPACES;
 
@@ -78,7 +79,7 @@ public class ConfigurationPlanReconciler extends BaseReshaprReconciler<Configura
       String currentPlanId = status.getConfigurationPlanId();
 
       boolean alreadyImported = currentPlanId != null && !currentPlanId.isBlank();
-      boolean specChanged = generation == null || generation != status.getObservedGeneration();
+      boolean specChanged = generation == null || !Objects.equals(generation, status.getObservedGeneration());
 
       if (alreadyImported && !specChanged) {
          logger.debugf("ConfigurationPlan '%s' already created (id=%s) and spec unchanged — nothing to do", name, currentPlanId);
@@ -165,6 +166,7 @@ public class ConfigurationPlanReconciler extends BaseReshaprReconciler<Configura
                if (e.getCode() == 404) {
                   logger.warnf("Recorded control plane ConfigurationPlan id=%s for '%s' no longer exists (HTTP 404) — recreating",
                         currentPlanId, name);
+                  remotePlan.setId(null);
                   io.reshapr.client.model.ConfigurationPlan created = api.createConfigPlan(remotePlan);
                   newPlanId = created != null ? created.getId() : null;
                   if (spec.isApiKey() && newPlanId != null) {
@@ -192,7 +194,9 @@ public class ConfigurationPlanReconciler extends BaseReshaprReconciler<Configura
          status.setStatus(Status.READY);
          status.setMessage(null);
          status.setConfigurationPlanId(newPlanId);
-         status.setObservedGeneration(generation);
+         if (generation != null) {
+            status.setObservedGeneration(generation);
+         }
          resource.setStatus(status);
 
          return UpdateControl.patchStatus(resource);
