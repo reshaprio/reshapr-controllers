@@ -43,6 +43,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
+import java.util.Map;
+import java.util.Objects;
+
 import static io.javaoperatorsdk.operator.api.reconciler.Constants.WATCH_ALL_NAMESPACES;
 
 /**
@@ -76,7 +79,7 @@ public class ConfigurationPlanReconciler extends BaseReshaprReconciler<Configura
       String currentPlanId = status.getConfigurationPlanId();
 
       boolean alreadyImported = currentPlanId != null && !currentPlanId.isBlank();
-      boolean specChanged = generation == null || generation != status.getObservedGeneration();
+      boolean specChanged = generation == null || !Objects.equals(generation, status.getObservedGeneration());
 
       if (alreadyImported && !specChanged) {
          logger.debugf("ConfigurationPlan '%s' already created (id=%s) and spec unchanged — nothing to do", name, currentPlanId);
@@ -95,7 +98,8 @@ public class ConfigurationPlanReconciler extends BaseReshaprReconciler<Configura
          }
 
          String backendSecretId = null;
-         String organization = resource.getMetadata().getAnnotations().get(ReshaprAnnotations.ORGANIZATION);
+         Map<String, String> annotations = resource.getMetadata().getAnnotations();
+         String organization = annotations != null ? annotations.get(ReshaprAnnotations.ORGANIZATION) : null;
 
          if (spec.getOauth2() != null) {
             OAuth2Spec oauth2 = spec.getOauth2();
@@ -151,27 +155,48 @@ public class ConfigurationPlanReconciler extends BaseReshaprReconciler<Configura
             remotePlan.setBackendSecretId(backendSecretId);
          }
 
-         io.reshapr.client.model.ConfigurationPlan createdPlan = api.createConfigPlan(remotePlan);
-         String newPlanId = createdPlan.getId();
-
-         if (spec.isApiKey()) {
-            api.renewConfigPlanApiKey(newPlanId);
+         String newPlanId;
+         if (alreadyImported) {
+            remotePlan.setId(currentPlanId);
+            try {
+               io.reshapr.client.model.ConfigurationPlan updated = api.updateConfigPlan(currentPlanId, remotePlan);
+               newPlanId = updated != null && updated.getId() != null ? updated.getId() : currentPlanId;
+               logger.infof("ConfigurationPlan '%s' updated in control plane with id=%s", name, newPlanId);
+            } catch (ApiException e) {
+               if (e.getCode() == 404) {
+                  logger.warnf("Recorded control plane ConfigurationPlan id=%s for '%s' no longer exists (HTTP 404) — recreating",
+                        currentPlanId, name);
+                  remotePlan.setId(null);
+                  io.reshapr.client.model.ConfigurationPlan created = api.createConfigPlan(remotePlan);
+                  newPlanId = created != null ? created.getId() : null;
+                  if (spec.isApiKey() && newPlanId != null) {
+                     api.renewConfigPlanApiKey(newPlanId);
+                  }
+               } else {
+                  throw e;
+               }
+            }
+         } else {
+            io.reshapr.client.model.ConfigurationPlan createdPlan = api.createConfigPlan(remotePlan);
+            newPlanId = createdPlan != null ? createdPlan.getId() : null;
+            logger.infof("ConfigurationPlan '%s' created in control plane with id=%s", name, newPlanId);
+            if (spec.isApiKey() && newPlanId != null) {
+               api.renewConfigPlanApiKey(newPlanId);
+            }
          }
 
-         if (alreadyImported && !newPlanId.equals(currentPlanId)) {
-             try {
-                 api.deleteConfigPlan(currentPlanId);
-             } catch (ApiException e) {
-                 if (e.getCode() != 404) {
-                     logger.warnf(e, "Failed to delete previous ConfigurationPlan id=%s", currentPlanId);
-                 }
-             }
+         if (newPlanId == null) {
+            logger.warnf("ConfigurationPlan '%s': control plane did not return an id — rescheduling", name);
+            return recordStatus(resource, Status.IN_PROGRESS,
+                  "Control plane did not return a ConfigurationPlan id").rescheduleAfter(RETRY_DELAY_MS);
          }
 
          status.setStatus(Status.READY);
          status.setMessage(null);
          status.setConfigurationPlanId(newPlanId);
-         status.setObservedGeneration(generation);
+         if (generation != null) {
+            status.setObservedGeneration(generation);
+         }
          resource.setStatus(status);
 
          return UpdateControl.patchStatus(resource);

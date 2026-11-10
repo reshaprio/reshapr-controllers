@@ -23,6 +23,7 @@ import io.reshapr.client.model.Secret;
 import io.reshapr.kubernetes.api.configurationplan.v1alpha1.CachePolicy;
 import io.reshapr.kubernetes.api.configurationplan.v1alpha1.ConfigurationPlan;
 import io.reshapr.kubernetes.api.configurationplan.v1alpha1.ConfigurationPlanSpec;
+import io.reshapr.kubernetes.api.configurationplan.v1alpha1.ConfigurationPlanStatus;
 import io.reshapr.kubernetes.api.configurationplan.v1alpha1.HeaderPolicy;
 import io.reshapr.kubernetes.api.configurationplan.v1alpha1.HeaderRename;
 import io.reshapr.kubernetes.api.configurationplan.v1alpha1.HeaderRules;
@@ -277,4 +278,109 @@ class ConfigurationPlanReconcilerTest {
          assertTrue(sentPlan.getExcludedOperations() == null || sentPlan.getExcludedOperations().isEmpty());
       }
    }
+
+   @Test
+   void doReconcile_whenAlreadyImportedAndSpecChanged_updatesInPlaceInsteadOfRecreating() throws Exception {
+      ReshaprApiClientFactory factory = mock(ReshaprApiClientFactory.class);
+      ConfigurationPlanReconciler reconciler = new ConfigurationPlanReconciler(factory);
+      ApiClient apiClient = mock(ApiClient.class);
+      ConfigurationPlan cp = buildFullSpecConfigurationPlan();
+
+      ConfigurationPlanStatus status = new ConfigurationPlanStatus();
+      status.setConfigurationPlanId(REMOTE_PLAN_ID);
+      status.setObservedGeneration(1L);
+      status.setStatus(io.reshapr.kubernetes.api.model.Status.READY);
+      cp.setStatus(status);
+      cp.getMetadata().setGeneration(2L);
+
+      try (MockedConstruction<DefaultApi> mocked = Mockito.mockConstruction(DefaultApi.class,
+            (mock, ctx) -> {
+               when(mock.getServices(any(BigDecimal.class), any(BigDecimal.class)))
+                     .thenReturn(List.of(remoteService()));
+
+               Secret createdSecret = new Secret();
+               createdSecret.setId(REMOTE_SECRET_ID);
+               when(mock.createSecret(any(Secret.class))).thenReturn(createdSecret);
+
+               io.reshapr.client.model.ConfigurationPlan updated = new io.reshapr.client.model.ConfigurationPlan();
+               updated.setId(REMOTE_PLAN_ID);
+               when(mock.updateConfigPlan(Mockito.eq(REMOTE_PLAN_ID), any(io.reshapr.client.model.ConfigurationPlan.class)))
+                     .thenReturn(updated);
+            })) {
+
+         reconciler.doReconcile(cp, null, apiClient);
+
+         DefaultApi mockedApi = mocked.constructed().get(0);
+         verify(mockedApi).updateConfigPlan(Mockito.eq(REMOTE_PLAN_ID), any(io.reshapr.client.model.ConfigurationPlan.class));
+         verify(mockedApi, never()).createConfigPlan(any());
+         verify(mockedApi, never()).deleteConfigPlan(any());
+      }
+   }
+
+   @Test
+   void doReconcile_whenAlreadyImportedAndNotFound_recreatesConfigPlan() throws Exception {
+      ReshaprApiClientFactory factory = mock(ReshaprApiClientFactory.class);
+      ConfigurationPlanReconciler reconciler = new ConfigurationPlanReconciler(factory);
+      ApiClient apiClient = mock(ApiClient.class);
+      ConfigurationPlan cp = buildFullSpecConfigurationPlan();
+
+      ConfigurationPlanStatus status = new ConfigurationPlanStatus();
+      status.setConfigurationPlanId("stale-plan-id");
+      status.setObservedGeneration(1L);
+      status.setStatus(io.reshapr.kubernetes.api.model.Status.READY);
+      cp.setStatus(status);
+      cp.getMetadata().setGeneration(2L);
+
+      try (MockedConstruction<DefaultApi> mocked = Mockito.mockConstruction(DefaultApi.class,
+            (mock, ctx) -> {
+               when(mock.getServices(any(BigDecimal.class), any(BigDecimal.class)))
+                     .thenReturn(List.of(remoteService()));
+
+               Secret createdSecret = new Secret();
+               createdSecret.setId(REMOTE_SECRET_ID);
+               when(mock.createSecret(any(Secret.class))).thenReturn(createdSecret);
+
+               // 404 on update
+               when(mock.updateConfigPlan(Mockito.eq("stale-plan-id"), any(io.reshapr.client.model.ConfigurationPlan.class)))
+                     .thenThrow(new io.reshapr.client.ApiException(404, "Not Found"));
+
+               io.reshapr.client.model.ConfigurationPlan recreated = new io.reshapr.client.model.ConfigurationPlan();
+               recreated.setId(REMOTE_PLAN_ID);
+               when(mock.createConfigPlan(any(io.reshapr.client.model.ConfigurationPlan.class)))
+                     .thenReturn(recreated);
+            })) {
+
+         reconciler.doReconcile(cp, null, apiClient);
+
+         DefaultApi mockedApi = mocked.constructed().get(0);
+         verify(mockedApi).updateConfigPlan(Mockito.eq("stale-plan-id"), any(io.reshapr.client.model.ConfigurationPlan.class));
+         ArgumentCaptor<io.reshapr.client.model.ConfigurationPlan> createdPlanCaptor =
+               ArgumentCaptor.forClass(io.reshapr.client.model.ConfigurationPlan.class);
+         verify(mockedApi).createConfigPlan(createdPlanCaptor.capture());
+         assertNull(createdPlanCaptor.getValue().getId());
+         verify(mockedApi).renewConfigPlanApiKey(REMOTE_PLAN_ID);
+         assertEquals(REMOTE_PLAN_ID, cp.getStatus().getConfigurationPlanId());
+      }
+   }
+
+   @Test
+   void doReconcile_whenAlreadyImportedAndSpecUnchanged_skipsReconciliationEvenForHighGeneration() {
+      ReshaprApiClientFactory factory = mock(ReshaprApiClientFactory.class);
+      ConfigurationPlanReconciler reconciler = new ConfigurationPlanReconciler(factory);
+      ApiClient apiClient = mock(ApiClient.class);
+      ConfigurationPlan cp = buildFullSpecConfigurationPlan();
+
+      ConfigurationPlanStatus status = new ConfigurationPlanStatus();
+      status.setConfigurationPlanId(REMOTE_PLAN_ID);
+      status.setObservedGeneration(200L);
+      status.setStatus(io.reshapr.kubernetes.api.model.Status.READY);
+      cp.setStatus(status);
+      cp.getMetadata().setGeneration(200L);
+
+      UpdateControl<ConfigurationPlan> control = reconciler.doReconcile(cp, null, apiClient);
+
+      assertTrue(control.isNoUpdate());
+   }
 }
+
+
