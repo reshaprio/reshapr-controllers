@@ -62,6 +62,7 @@ class SkillsReconcilerTest {
 
       SkillItem item = new SkillItem();
       item.setRemoteContent("https://skills.example.com/open-meteo-forecast");
+      item.setRemoteSecret("skills-token");
       item.setPath("weather/forecast");
       item.setFiles(List.of("references/VARIABLES.md"));
       item.setMeta(Map.of("owner", "weather-team"));
@@ -96,6 +97,7 @@ class SkillsReconcilerTest {
 
       JsonNode skill = root.get("skills").get("open-meteo-forecast");
       assertEquals("https://skills.example.com/open-meteo-forecast", skill.get("remoteContent").asText());
+      assertEquals("skills-token", skill.get("remoteSecret").asText());
       assertEquals("weather/forecast", skill.get("path").asText());
       assertEquals("references/VARIABLES.md", skill.get("files").get(0).asText());
       assertEquals("weather-team", skill.get("_meta").get("owner").asText());
@@ -112,6 +114,7 @@ class SkillsReconcilerTest {
       JsonNode skill = objectMapper.readTree(reconciler.getArtifactContent(skills))
             .get("skills").get("pastry-ordering");
       assertEquals("http://localhost:3040/pastry-ordering", skill.get("remoteContent").asText());
+      assertFalse(skill.has("remoteSecret"));
       assertFalse(skill.has("path"));
       assertFalse(skill.has("files"));
       assertFalse(skill.has("_meta"));

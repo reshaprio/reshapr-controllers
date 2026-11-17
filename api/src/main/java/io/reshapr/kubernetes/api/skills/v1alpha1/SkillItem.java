@@ -37,13 +37,16 @@ import java.util.Map;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "remoteContent", "path", "files", "_meta" })
+@JsonPropertyOrder({ "remoteContent", "remoteSecret", "path", "files", "_meta" })
 @Buildable(editableEnabled = false, builderPackage = "io.fabric8.kubernetes.api.builder")
 public class SkillItem {
 
     @JsonPropertyDescription("The remote HTTP(S) URL of the skill directory (the one holding SKILL.md).")
     @Required
     private String remoteContent;
+
+    @JsonPropertyDescription("The name of an existing reShapr Secret used to authenticate remoteContent fetches, if applicable.")
+    private String remoteSecret;
 
     @JsonPropertyDescription("Optional organizational prefix of the skill URI, without leading or trailing slash (e.g. 'acme/billing').")
     private String path;
@@ -63,6 +66,14 @@ public class SkillItem {
 
     public void setRemoteContent(String remoteContent) {
         this.remoteContent = remoteContent;
+    }
+
+    public String getRemoteSecret() {
+        return remoteSecret;
+    }
+
+    public void setRemoteSecret(String remoteSecret) {
+        this.remoteSecret = remoteSecret;
     }
 
     public String getPath() {

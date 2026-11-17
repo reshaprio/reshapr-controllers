@@ -203,6 +203,36 @@ class ResourcesReconcilerTest {
         assertFalse(root.has("resourceTemplates"));
     }
 
+    @Test
+    void getArtifactContent_includesRemoteSecretWhenPresent() throws Exception {
+        ResourceItem remoteResource = new ResourceItem();
+        remoteResource.setName("dashboard");
+        remoteResource.setRemoteContent("https://ui.internal.example/dashboard.html");
+        remoteResource.setRemoteSecret("docs-token");
+
+        ResourceTemplateItem remoteTemplate = new ResourceTemplateItem();
+        remoteTemplate.setName("file-viewer");
+        remoteTemplate.setRemoteContent("https://ui.internal.example/viewer.html");
+        remoteTemplate.setRemoteSecret("template-token");
+
+        Resources resources = buildResources(
+                "res-remote-secret",
+                "Repository Service",
+                "1.0.0",
+                Map.of("ui://repo/dashboard", remoteResource),
+                Map.of("ui://repo/files/{path}", remoteTemplate)
+        );
+        JsonNode root = objectMapper.readTree(reconciler.getArtifactContent(resources));
+
+        JsonNode resNode = root.get("resources").get("ui://repo/dashboard");
+        assertEquals("https://ui.internal.example/dashboard.html", resNode.get("remoteContent").asText());
+        assertEquals("docs-token", resNode.get("remoteSecret").asText());
+
+        JsonNode tplNode = root.get("resourceTemplates").get("ui://repo/files/{path}");
+        assertEquals("https://ui.internal.example/viewer.html", tplNode.get("remoteContent").asText());
+        assertEquals("template-token", tplNode.get("remoteSecret").asText());
+    }
+
     // ── status update ─────────────────────────────────────────────────────────
 
     @Test

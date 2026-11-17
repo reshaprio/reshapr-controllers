@@ -73,6 +73,7 @@ Skill names (the map keys) must match the `name` declared in the `SKILL.md` fron
 | Property        | Description                                                                         |
 |-----------------|-------------------------------------------------------------------------------------|
 | `remoteContent` | **Mandatory**. HTTP(S) URL of the skill directory — the one holding `SKILL.md`.     |
+| `remoteSecret`  | **Optional**. Name of an existing reShapr `Secret` used to authenticate `remoteContent` fetches. |
 | `path`          | **Optional**. Organizational prefix of the skill URI, without leading or trailing slash (e.g. `acme/billing`). |
 | `files`         | **Optional**. Supporting files, as paths relative to the skill directory. `SKILL.md` is implicit and must not be listed. |
 | `_meta`         | **Optional**. Free-form metadata attached to the `SKILL.md` resource.               |

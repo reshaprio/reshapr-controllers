@@ -111,6 +111,7 @@ resources (e.g. `file:///docs/getting-started.md`, `https://example.com/logo.png
 | `text`           | **Optional / exclusive**. Inlined textual content. Mutually exclusive with `blob` and `remoteContent`.                                                                          |
 | `blob`           | **Optional / exclusive**. Base64-encoded binary content. Mutually exclusive with `text` and `remoteContent`.                                                                    |
 | `remoteContent`  | **Optional / exclusive**. Remote URI from which the control plane can fetch the content. Mutually exclusive with `text` and `blob`.                                             |
+| `remoteSecret`   | **Optional**. Name of an existing reShapr `Secret` used to authenticate `remoteContent` fetches (only valid when `remoteContent` is set).                                      |
 | `icons`          | **Optional**. List of [icon entries](#icon-entry) associated with this resources.                                                                                                |
 | `annotations`    | **Optional**. Additional [annotations](#annotations) (audience, priority, last modified date).                                                                                  |
 
@@ -128,9 +129,11 @@ Each entry under `spec.resourceTemplates` follows this schema. The map key is th
 | `name`         | **Mandatory**. Name of the resources template.                                                     |
 | `title`        | **Optional**. Human-readable title of the resources template.                                      |
 | `description`  | **Optional**. Human-readable long description of the resources template.                           |
-| `mimeType`     | **Optional**. MIME type of the resources materialized from this template.                         |
-| `icons`        | **Optional**. List of [icon entries](#icon-entry) associated with this template.                  |
-| `annotations`  | **Optional**. Additional [annotations](#annotations) (audience, priority, last modified date).    |
+| `mimeType`       | **Optional**. MIME type of the resources materialized from this template.                         |
+| `remoteContent`  | **Optional**. Remote URI from which the gateway can fetch the template content (e.g. `ui://`).    |
+| `remoteSecret`   | **Optional**. Name of an existing reShapr `Secret` used to authenticate `remoteContent` fetches.  |
+| `icons`          | **Optional**. List of [icon entries](#icon-entry) associated with this template.                  |
+| `annotations`    | **Optional**. Additional [annotations](#annotations) (audience, priority, last modified date).    |
 
 ### Icon entry
 
