@@ -31,7 +31,7 @@ import java.util.List;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "name", "title", "description", "mimeType", "icons", "annotations" })
+@JsonPropertyOrder({ "name", "title", "description", "mimeType", "remoteContent", "remoteSecret", "icons", "annotations" })
 @Buildable(editableEnabled = false, builderPackage = "io.fabric8.kubernetes.api.builder")
 public class ResourceTemplateItem {
 
@@ -46,6 +46,12 @@ public class ResourceTemplateItem {
 
     @JsonPropertyDescription("The MIME type of these resource templates.")
     private String mimeType;
+
+    @JsonPropertyDescription("The remote URI where this resource template content can be found, if applicable.")
+    private String remoteContent;
+
+    @JsonPropertyDescription("The name of an existing reShapr Secret used to authenticate remoteContent fetches, if applicable.")
+    private String remoteSecret;
 
     @JsonPropertyDescription("Optional icons for this resource template.")
     private List<ResourceIconItem> icons;
@@ -64,6 +70,12 @@ public class ResourceTemplateItem {
 
     public String getMimeType() { return mimeType; }
     public void setMimeType(String mimeType) { this.mimeType = mimeType; }
+
+    public String getRemoteContent() { return remoteContent; }
+    public void setRemoteContent(String remoteContent) { this.remoteContent = remoteContent; }
+
+    public String getRemoteSecret() { return remoteSecret; }
+    public void setRemoteSecret(String remoteSecret) { this.remoteSecret = remoteSecret; }
 
     public List<ResourceIconItem> getIcons() { return icons; }
     public void setIcons(List<ResourceIconItem> icons) { this.icons = icons; }

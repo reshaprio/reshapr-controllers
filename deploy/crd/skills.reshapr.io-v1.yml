@@ -57,6 +57,10 @@ spec:
                       description: "The remote HTTP(S) URL of the skill directory\
                         \ (the one holding SKILL.md)."
                       type: "string"
+                    remoteSecret:
+                      description: "The name of an existing reShapr Secret used to\
+                        \ authenticate remoteContent fetches, if applicable."
+                      type: "string"
                   required:
                   - "remoteContent"
                   type: "object"
