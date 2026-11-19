@@ -43,6 +43,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -57,6 +58,8 @@ import static io.javaoperatorsdk.operator.api.reconciler.Constants.WATCH_ALL_NAM
 @ApplicationScoped
 public class ConfigurationPlanReconciler extends BaseReshaprReconciler<ConfigurationPlan> implements Cleaner<ConfigurationPlan> {
 
+   private static final int SECRETS_PAGE_SIZE = 50;
+
    private final Logger logger = Logger.getLogger(getClass());
 
    @Inject
@@ -66,7 +69,6 @@ public class ConfigurationPlanReconciler extends BaseReshaprReconciler<Configura
 
    @Override
    protected UpdateControl<ConfigurationPlan> doReconcile(ConfigurationPlan resource, Context<ConfigurationPlan> context, ApiClient apiClient) {
-      DefaultApi api = new DefaultApi(apiClient);
       ConfigurationPlanSpec spec = resource.getSpec();
       String name = resource.getMetadata().getName();
 
@@ -91,7 +93,15 @@ public class ConfigurationPlanReconciler extends BaseReshaprReconciler<Configura
          return recordStatus(resource, Status.ERROR, "No spec.service.name provided");
       }
 
+      String backendSecretRef = spec.getBackendSecretRef();
+      boolean hasBackendSecretRef = backendSecretRef != null && !backendSecretRef.isBlank();
+      if (hasBackendSecretRef && spec.getOauth2() != null) {
+         logger.warnf("ConfigurationPlan '%s' specifies both spec.backendSecretRef and spec.oauth2 — cannot reconcile", name);
+         return recordStatus(resource, Status.ERROR, "spec.backendSecretRef and spec.oauth2 are mutually exclusive");
+      }
+
       try {
+         DefaultApi api = new DefaultApi(apiClient);
          io.reshapr.client.model.Service remoteService = findRemoteService(api, spec.getService().getName(), spec.getService().getVersion());
          if (remoteService == null) {
             return recordStatus(resource, Status.IN_PROGRESS, "Target Service not found in control plane").rescheduleAfter(RETRY_DELAY_MS);
@@ -101,7 +111,17 @@ public class ConfigurationPlanReconciler extends BaseReshaprReconciler<Configura
          Map<String, String> annotations = resource.getMetadata().getAnnotations();
          String organization = annotations != null ? annotations.get(ReshaprAnnotations.ORGANIZATION) : null;
 
-         if (spec.getOauth2() != null) {
+         if (hasBackendSecretRef) {
+            Secret remoteSecret = findRemoteSecret(api, backendSecretRef.trim());
+            if (remoteSecret == null || remoteSecret.getId() == null) {
+               logger.warnf("ConfigurationPlan '%s': target Secret '%s' not found in control plane — rescheduling",
+                     name, backendSecretRef);
+               return recordStatus(resource, Status.IN_PROGRESS,
+                     "Target Secret '" + backendSecretRef + "' not found in control plane")
+                     .rescheduleAfter(RETRY_DELAY_MS);
+            }
+            backendSecretId = remoteSecret.getId().toString();
+         } else if (spec.getOauth2() != null) {
             OAuth2Spec oauth2 = spec.getOauth2();
             Secret secret = new Secret();
             secret.setOrganizationId(organization);
@@ -251,6 +271,26 @@ public class ConfigurationPlanReconciler extends BaseReshaprReconciler<Configura
          clientRules.setRename(renames);
       }
       return clientRules;
+   }
+
+   /** Find a control plane Secret by name, paginating through the organization's secrets. */
+   private Secret findRemoteSecret(DefaultApi api, String secretName) throws ApiException {
+      int pageNumber = 0;
+      while (true) {
+         List<Secret> page = api.getSecrets(pageNumber, SECRETS_PAGE_SIZE);
+         if (page == null || page.isEmpty()) {
+            return null;
+         }
+         for (Secret candidate : page) {
+            if (secretName.equals(candidate.getName())) {
+               return candidate;
+            }
+         }
+         if (page.size() < SECRETS_PAGE_SIZE) {
+            return null;
+         }
+         pageNumber++;
+      }
    }
 
    @Override

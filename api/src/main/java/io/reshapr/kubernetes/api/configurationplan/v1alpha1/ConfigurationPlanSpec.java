@@ -27,7 +27,7 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "service", "backendEndpoint", "backendTimeout", "apiKey", "oauth2", "artifacts", "audit", "includedOperations", "excludedOperations", "cachePolicy", "headerPolicy", "toolExposureMode" })
+@JsonPropertyOrder({ "service", "backendEndpoint", "backendTimeout", "backendSecretRef", "apiKey", "oauth2", "artifacts", "audit", "includedOperations", "excludedOperations", "cachePolicy", "headerPolicy", "toolExposureMode" })
 @Buildable(editableEnabled = false, builderPackage = "io.fabric8.kubernetes.api.builder")
 public class ConfigurationPlanSpec {
 
@@ -40,6 +40,9 @@ public class ConfigurationPlanSpec {
    @JsonPropertyDescription("Timeout in milliseconds for requests to the backend endpoint")
    @Min(1)
    private Integer backendTimeout;
+  
+   @JsonPropertyDescription("Name of an existing Secret in the reShapr control plane to authenticate backend calls. Mutually exclusive with oauth2.")
+   private String backendSecretRef;
 
    @JsonPropertyDescription("Whether an API Key should be generated")
    private boolean apiKey = false;
@@ -84,6 +87,14 @@ public class ConfigurationPlanSpec {
       this.backendEndpoint = backendEndpoint;
    }
 
+   public String getBackendSecretRef() {
+      return backendSecretRef;
+   }
+
+   public void setBackendSecretRef(String backendSecretRef) {
+      this.backendSecretRef = backendSecretRef;
+   }
+  
    public Integer getBackendTimeout() {
       return backendTimeout;
    }
