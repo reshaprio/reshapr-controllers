@@ -34,6 +34,11 @@ spec:
               backendEndpoint:
                 description: "Backend endpoint for this Configuration Plan"
                 type: "string"
+              backendTimeout:
+                description: "Timeout in milliseconds for requests to the backend\
+                  \ endpoint"
+                minimum: 1.0
+                type: "integer"
               cachePolicy:
                 description: "The cache policy to apply"
                 properties:
