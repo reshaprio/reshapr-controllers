@@ -79,6 +79,7 @@ status:
 |--------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `service`          | **Mandatory**. Reference to the target [Service](./service-cr.md) this plan configures. See _Service reference_ below.                                                                                                                                                       |
 | `backendEndpoint`  | **Mandatory**. URL of the backend implementation the reShapr gateway should route traffic to.                                                                                                                                                                                |
+| `backendTimeout`   | **Optional**. Timeout in milliseconds for requests to the backend endpoint (must be ≥ 1). When absent, the gateway falls back to its built-in default (`3000` ms).                                                                                                           |
 | `apiKey`           | **Optional**. When `true`, the control plane generates an API Key for this plan. Defaults to `false`.                                                                                                                                                                        |
 | `oauth2`           | **Optional**. OAuth2 client credentials to attach to this plan. See _OAuth2 specification_ below.                                                                                                                                                                            |
 | `artifacts`        | **Optional**. List of selected attached artifact names. Empty (or absent) means all the attached artifacts of the service apply. The service main artifact is never impacted.                                                                                                |
@@ -158,6 +159,7 @@ spec:
     name: API Pastries
     version: 0.0.1
   backendEndpoint: https://pastries.prod.acme.com
+  backendTimeout: 10000
   apiKey: true
   toolExposureMode: HYBRID
   oauth2:

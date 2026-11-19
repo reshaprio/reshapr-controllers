@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import io.fabric8.generator.annotation.Min;
 import io.sundr.builder.annotations.Buildable;
 import io.reshapr.kubernetes.api.model.ServiceRef;
 
@@ -26,7 +27,7 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "service", "backendEndpoint", "apiKey", "oauth2", "artifacts", "audit", "includedOperations", "excludedOperations", "cachePolicy", "headerPolicy", "toolExposureMode" })
+@JsonPropertyOrder({ "service", "backendEndpoint", "backendTimeout", "apiKey", "oauth2", "artifacts", "audit", "includedOperations", "excludedOperations", "cachePolicy", "headerPolicy", "toolExposureMode" })
 @Buildable(editableEnabled = false, builderPackage = "io.fabric8.kubernetes.api.builder")
 public class ConfigurationPlanSpec {
 
@@ -35,6 +36,10 @@ public class ConfigurationPlanSpec {
 
    @JsonPropertyDescription("Backend endpoint for this Configuration Plan")
    private String backendEndpoint;
+
+   @JsonPropertyDescription("Timeout in milliseconds for requests to the backend endpoint")
+   @Min(1)
+   private Integer backendTimeout;
 
    @JsonPropertyDescription("Whether an API Key should be generated")
    private boolean apiKey = false;
@@ -77,6 +82,14 @@ public class ConfigurationPlanSpec {
 
    public void setBackendEndpoint(String backendEndpoint) {
       this.backendEndpoint = backendEndpoint;
+   }
+
+   public Integer getBackendTimeout() {
+      return backendTimeout;
+   }
+
+   public void setBackendTimeout(Integer backendTimeout) {
+      this.backendTimeout = backendTimeout;
    }
 
    public boolean isApiKey() {
