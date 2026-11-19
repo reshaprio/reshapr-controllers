@@ -72,7 +72,7 @@ For the full installation guide (operator + admission webhook), see
 User-facing documentation lives under the [`documentation/`](./documentation/README.md) folder.
 It covers installation, the instance connection flow, the admission controller and a reference
 for each Custom Resource (`Service`, `GatewayGroup`, `ConfigurationPlan`, `Exposition`,
-`SecretSource`, `CustomTools`, `Resources`, `Prompts`, `Skills`).
+`SecretSource`, `CustomTools`, `Resources`, `Prompts`, `Skills`, `ToolsOutputFilters`).
 
 ## License
 

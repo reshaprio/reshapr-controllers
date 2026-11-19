@@ -57,7 +57,7 @@ Reconcilers implement `Reconciler<T>` from JOSDK. Package: `io.reshapr.kubernete
 - No Lombok — manual getters/setters with `@Buildable` (Sundrio) for Fabric8-compatible builders
 
 ## Generated Code (do not edit)
-- `operator/target/generated-sources/openapi/` — REST client generated from `operator/api/reshapr-public-openapi-v0.1.yaml`
+- `operator/target/generated-sources/openapi/` — REST client generated from `operator/api/reshapr-public-openapi.yaml`
 - `api/target/classes/schemas/` — JSON schemas generated from CRD classes at build time
 
 ## Deployment

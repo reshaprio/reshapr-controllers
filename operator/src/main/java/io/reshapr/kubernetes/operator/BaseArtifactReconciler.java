@@ -36,7 +36,7 @@ import org.jboss.logging.Logger;
 import java.util.List;
 
 /**
- * Abstract reconciler for GitOps synchronization of Artifacts (like CustomTools, Prompts).
+ * Abstract reconciler for GitOps synchronization of Artifacts (like CustomTools, Prompts,...).
  */
 public abstract class BaseArtifactReconciler<R extends CustomResource<?, ?>> extends BaseReshaprReconciler<R> implements Cleaner<R> {
 

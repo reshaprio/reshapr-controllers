@@ -18,7 +18,7 @@ controllers can do anything useful.
 Concretely, this repo ships three complementary building blocks:
 
 * **CRDs + Java API library** modelling reShapr concepts (`Service`, `GatewayGroup`,
-  `ConfigurationPlan`, `Exposition`, `SecretSource`, `CustomTools`, `Resources`, `Prompts`, `Skills`) as first-class Kubernetes
+  `ConfigurationPlan`, `Exposition`, `SecretSource`, `CustomTools`, `Resources`, `Prompts`, `Skills`, `ToolsOutputFilters`) as first-class Kubernetes
   objects.
 * **A Kubernetes Operator** that watches these CRs and reconciles them against the reShapr
   control plane through its public REST API.
@@ -116,7 +116,7 @@ independence:
 
 The operator does not call the control plane through a hand-written client. Instead, it
 generates one at build time from
-[`operator/api/reshapr-public-openapi-v0.1.yaml`](./operator/api/reshapr-public-openapi-v0.1.yaml)
+[`operator/api/reshapr-public-openapi.yaml`](operator/api/reshapr-public-openapi.yaml)
 via `openapi-generator-maven-plugin`, into `io.reshapr.client.{api,model}`.
 
 Trade-offs:

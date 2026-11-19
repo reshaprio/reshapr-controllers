@@ -1,8 +1,8 @@
 ---
 openapi: 3.0.2
 info:
-  title: reShapr Public API v0.1
-  version: 0.0.1
+  title: reShapr Public API
+  version: 1.1
   description: reShapr control plane REST API
   contact:
     name: Laurent Broudoux
@@ -95,7 +95,7 @@ paths:
             The artifact could not be imported. The response body contains a message describing the
             validation error (e.g. invalid or malformed specification file, unresolvable remote URL).
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: importArtifact
   /v1/artifacts/attach:
     post:
@@ -203,12 +203,12 @@ paths:
   /v1/configurationPlans:
     get:
       parameters:
-      - name: serviceId
-        description: Service unique identifier
-        schema:
-          type: string
-        in: query
-        required: true
+        - name: serviceId
+          description: Service unique identifier
+          schema:
+            type: string
+          in: query
+          required: true
       responses:
         "200":
           content:
@@ -219,7 +219,7 @@ paths:
                   $ref: '#/components/schemas/ConfigurationPlan'
           description: Get the list of ConfigurationPlan by service identifier
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: getConfigPlans
     post:
       requestBody:
@@ -244,7 +244,7 @@ paths:
           description: "One COnfiguration Plan dependency (service, secret, ...) cannot\
             \ be found"
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: createConfigPlan
   /v1/configurationPlans/{id}:
     get:
@@ -316,16 +316,16 @@ paths:
   /v1/expositions:
     get:
       parameters:
-      - name: serviceId
-        description: Unique identifier of the Service to get Expositions for
-        schema:
-          type: string
-        in: query
-      - name: gatewayGroupId
-        description: 'Identifier of the Gateway Group to get Expositions for '
-        schema:
-          type: string
-        in: query
+        - name: serviceId
+          description: Unique identifier of the Service to get Expositions for
+          schema:
+            type: string
+          in: query
+        - name: gatewayGroupId
+          description: 'Identifier of the Gateway Group to get Expositions for '
+          schema:
+            type: string
+          in: query
       responses:
         "200":
           content:
@@ -337,7 +337,7 @@ paths:
           description: Get the expositions - either all or filtered by Service or
             Gateway Group
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: getExpositions
     post:
       requestBody:
@@ -363,7 +363,7 @@ paths:
         "409":
           description: Exposition already exists (either with same name or same Configuration Plan and Gateway Group)
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: createExposition
   /v1/expositions/{id}:
     get:
@@ -446,7 +446,7 @@ paths:
                   $ref: '#/components/schemas/GatewayGroup'
           description: The available GatewayGroups
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: listGatewayGroups
     post:
       requestBody:
@@ -465,7 +465,7 @@ paths:
         "429":
           description: Quotas of GatewayGroups exceeded
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: createGatewayGroup
   /v1/gatewayGroups/{id}:
     get:
@@ -526,7 +526,7 @@ paths:
                   $ref: '#/components/schemas/Quota'
           description: Get the quotas of the user's organization
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: getQuotas
   /v1/gateways:
     get:
@@ -540,21 +540,21 @@ paths:
                   $ref: '#/components/schemas/GatewayView'
           description: The gateways currently active in the user's organization
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: listGateways
   /v1/secrets:
     get:
       parameters:
-      - name: page
-        description: The number of the page to fetch (default is 0)
-        schema:
-          type: integer
-        in: query
-      - name: size
-        description: The number of secrets in a page to fetch (default is 20)
-        schema:
-          type: integer
-        in: query
+        - name: page
+          description: The number of the page to fetch (default is 0)
+          schema:
+            type: integer
+          in: query
+        - name: size
+          description: The number of secrets in a page to fetch (default is 20)
+          schema:
+            type: integer
+          in: query
       responses:
         "200":
           content:
@@ -565,7 +565,7 @@ paths:
                   $ref: '#/components/schemas/Secret'
           description: Get the user's organization secrets
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: getSecrets
     post:
       requestBody:
@@ -585,21 +585,21 @@ paths:
         "409":
           description: Secret with this name already exists in the organization
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: createSecret
   /v1/services:
     get:
       parameters:
-      - name: page
-        description: Number of page to fetch (default to 0)
-        schema:
-          type: number
-        in: query
-      - name: size
-        description: Size of the page to fetch (default to 20)
-        schema:
-          type: number
-        in: query
+        - name: page
+          description: Number of page to fetch (default to 0)
+          schema:
+            type: number
+          in: query
+        - name: size
+          description: Size of the page to fetch (default to 20)
+          schema:
+            type: number
+          in: query
       responses:
         "200":
           content:
@@ -610,7 +610,7 @@ paths:
                   $ref: '#/components/schemas/Service'
           description: The list of fetched Services
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: getServices
   /v1/services/{id}:
     get:
@@ -624,7 +624,7 @@ paths:
         "404":
           description: Service with id is unknown
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: getServiceView
     delete:
       responses:
@@ -633,15 +633,15 @@ paths:
         "404":
           description: Service is unknown
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: deleteService
     parameters:
-    - name: id
-      description: The Service unique identifier
-      schema:
-        type: string
-      in: path
-      required: true
+      - name: id
+        description: The Service unique identifier
+        schema:
+          type: string
+        in: path
+        required: true
   /v1/secrets/{id}:
     get:
       responses:
@@ -667,7 +667,7 @@ paths:
                 $ref: '#/components/schemas/Secret'
           description: The updated secret
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: updateSecret
     delete:
       responses:
@@ -676,15 +676,15 @@ paths:
         "404":
           description: Secret with this id is unknown
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: deleteSecret
     parameters:
-    - name: id
-      description: The unique identifier of the Secret to manage
-      schema:
-        type: string
-      in: path
-      required: true
+      - name: id
+        description: The unique identifier of the Secret to manage
+        schema:
+          type: string
+        in: path
+        required: true
   /v1/tokens/apiTokens:
     get:
       responses:
@@ -697,7 +697,7 @@ paths:
                   $ref: '#/components/schemas/ApiToken'
           description: The list of ApiTokens for this organization
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: getApiTokens
     post:
       requestBody:
@@ -714,7 +714,7 @@ paths:
                 $ref: '#/components/schemas/ApiToken'
           description: The newmly created ApiToken
       security:
-      - jwt-bearer: []
+        - jwt-bearer: []
       operationId: createApiToken
   /v1/tokens/apiTokens/{id}:
     delete:
@@ -727,12 +727,12 @@ paths:
       security:
         - jwt-bearer: []
     parameters:
-    - name: id
-      description: The unique identifier of ApiToken to manage
-      schema:
-        type: string
-      in: path
-      required: true
+      - name: id
+        description: The unique identifier of ApiToken to manage
+        schema:
+          type: string
+        in: path
+        required: true
   /v1/user/profile:
     get:
       operationId: getUserProfile
@@ -862,7 +862,7 @@ components:
     Error:
       description: A structured error payload returned when a request cannot be fulfilled
       required:
-      - message
+        - message
       type: object
       properties:
         message:
@@ -871,13 +871,13 @@ components:
     Artifact:
       description: An Artifact in reShapr control plane
       required:
-      - id
-      - organizationId
-      - name
-      - content
-      - mainArtifact
-      - type
-      - sourceArtifact
+        - id
+        - organizationId
+        - name
+        - content
+        - mainArtifact
+        - type
+        - sourceArtifact
       type: object
       properties:
         id:
@@ -958,27 +958,27 @@ components:
     ArtifactType:
       description: The supported type of Artifact
       enum:
-      - JSON_SCHEMA
-      - OPEN_API_SPEC
-      - GRAPHQL_SCHEMA
-      - PROTOBUF_SCHEMA
-      - PROTOBUF_DESCRIPTOR
-      - JSON_FRAGMENT
-      - RESHAPR_PROMPTS
-      - RESHAPR_CUSTOM_TOOLS
-      - RESHAPR_RESOURCES
-      - RESHAPR_TOOLS_OUTPUT_FILTERS
-      - RESHAPR_SKILLS
+        - JSON_SCHEMA
+        - OPEN_API_SPEC
+        - GRAPHQL_SCHEMA
+        - PROTOBUF_SCHEMA
+        - PROTOBUF_DESCRIPTOR
+        - JSON_FRAGMENT
+        - RESHAPR_PROMPTS
+        - RESHAPR_CUSTOM_TOOLS
+        - RESHAPR_RESOURCES
+        - RESHAPR_TOOLS_OUTPUT_FILTERS
+        - RESHAPR_SKILLS
       type: string
     ArtifactReference:
       description: Basic information about an Artifact in reShapr control plane
       required:
-      - id
-      - organizationId
-      - name
-      - mainArtifact
-      - type
-      - sourceArtifact
+        - id
+        - organizationId
+        - name
+        - mainArtifact
+        - type
+        - sourceArtifact
       type: object
       properties:
         id:
@@ -1012,8 +1012,8 @@ components:
     ConfigurationPlanSummary:
       description: The summary of a ConfigurationPlan in reShapr control plane
       required:
-      - id
-      - backendEndpoint
+        - id
+        - backendEndpoint
       type: object
       properties:
         id:
@@ -1028,28 +1028,28 @@ components:
     SecretType:
       description: The types of Secret available in reShapr
       enum:
-      - ARTIFACT
-      - ENDPOINT
+        - ARTIFACT
+        - ENDPOINT
       type: string
     SecretAuthMethod:
       description: >-
         The explicit authentication method a Secret carries when used to authenticate against a backend endpoint.
         Used as the dispatch discriminator by the proxy. The list is extensible: new methods may be added over time.
       enum:
-      - BASIC
-      - BEARER_TOKEN
-      - OAUTH2_AUTHORIZATION_CODE
-      - OAUTH2_CLIENT_CREDENTIALS
+        - BASIC
+        - BEARER_TOKEN
+        - OAUTH2_AUTHORIZATION_CODE
+        - OAUTH2_CLIENT_CREDENTIALS
       type: string
     ServiceView:
       description: An aggregated view no Service and related elements in reShapr
       required:
-      - id
-      - organizationId
-      - name
-      - version
-      - createdOn
-      - type
+        - id
+        - organizationId
+        - name
+        - version
+        - createdOn
+        - type
       type: object
       properties:
         id:
@@ -1079,10 +1079,10 @@ components:
     ServiceSummary:
       description: Basic information of a Service in reShapr control plane
       required:
-      - id
-      - name
-      - version
-      - type
+        - id
+        - name
+        - version
+        - type
       type: object
       properties:
         id:
@@ -1100,23 +1100,23 @@ components:
     ServiceType:
       description: The available types of Service in reShapr
       enum:
-      - REST
-      - GRAPHQL
-      - GRPC
+        - REST
+        - GRAPHQL
+        - GRPC
       type: string
     ValidityPeriod:
       description: 'The available duration that representation a validity period in reShapr'
       enum:
-      - "1"
-      - "7"
-      - "30"
-      - "90"
+        - "1"
+        - "7"
+        - "30"
+        - "90"
       type: string
     Exposition:
       description: An Exposition in reShapr control plane
       required:
-      - id
-      - organizationId
+        - id
+        - organizationId
       type: object
       properties:
         id:
@@ -1144,8 +1144,8 @@ components:
     ExpositionReference:
       description: A reference to an Exposition in reShapr control plane
       required:
-      - id
-      - organizationId
+        - id
+        - organizationId
       type: object
       properties:
         id:
@@ -1171,7 +1171,7 @@ components:
     Operation:
       description: A Service Operation in reShapr control plane
       required:
-      - name
+        - name
       type: object
       properties:
         name:
@@ -1192,12 +1192,12 @@ components:
     Service:
       description: A Service in reShapr control plane
       required:
-      - id
-      - organizationId
-      - name
-      - version
-      - createdOn
-      - type
+        - id
+        - organizationId
+        - name
+        - version
+        - createdOn
+        - type
       type: object
       properties:
         id:
@@ -1222,11 +1222,11 @@ components:
     ConfigurationPlan:
       description: A ConfigurationPlan in reShapr control plane
       required:
-      - id
-      - organizationId
-      - backendEndpoint
-      - name
-      - serviceId
+        - id
+        - organizationId
+        - backendEndpoint
+        - name
+        - serviceId
       type: object
       properties:
         id:
@@ -1354,8 +1354,8 @@ components:
       description: A single header rename directive; removes the "from" header and sets its
         value on the "to" header before propagation.
       required:
-      - from
-      - to
+        - from
+        - to
       type: object
       properties:
         from:
@@ -1368,11 +1368,11 @@ components:
       description: An Exposition that is currently active. ie. exposed by at least
         one Gateway
       required:
-      - service
-      - configurationPlan
-      - gateways
-      - id
-      - organizationId
+        - service
+        - configurationPlan
+        - gateways
+        - id
+        - organizationId
       type: object
       properties:
         service:
@@ -1402,8 +1402,8 @@ components:
     ConfigurationPlanView:
       description: Minimal representation of a Configuration Plan
       required:
-      - id
-      - backendEndpoint
+        - id
+        - backendEndpoint
       type: object
       properties:
         id:
@@ -1415,9 +1415,9 @@ components:
     Gateway:
       description: Minimalist representation of a Gateway
       required:
-      - id
-      - name
-      - fqdns
+        - id
+        - name
+        - fqdns
       type: object
       properties:
         id:
@@ -1434,12 +1434,12 @@ components:
     Quota:
       description: A Quota in control plance
       required:
-      - id
-      - organizationId
-      - metric
-      - enabled
-      - limit
-      - remaining
+        - id
+        - organizationId
+        - metric
+        - enabled
+        - limit
+        - remaining
       type: object
       properties:
         id:
@@ -1471,9 +1471,9 @@ components:
         When authMethod is absent, the mechanism is inferred from the populated fields
         (token, username/password, oauth2ClientConfiguration) for backward compatibility.
       required:
-      - organizationId
-      - name
-      - type
+        - organizationId
+        - name
+        - type
       type: object
       properties:
         id:
@@ -1525,8 +1525,8 @@ components:
         The configuration of an OAuth2 client, used either for the Authorization Code
         flow (with elicitation) or the Client Credentials flow (machine-to-machine).
       required:
-      - clientId
-      - tokenEndpoint
+        - clientId
+        - tokenEndpoint
       type: object
       properties:
         clientId:
@@ -1554,9 +1554,9 @@ components:
     GatewayGroup:
       description: A GatewayGroup in Reshapr control plane
       required:
-      - id
-      - organizationId
-      - name
+        - id
+        - organizationId
+        - name
       type: object
       properties:
         id:
@@ -1576,8 +1576,8 @@ components:
     GatewayView:
       description: A gateway currently active and reporting health to the Reshapr control plane
       required:
-      - id
-      - name
+        - id
+        - name
       type: object
       properties:
         id:
@@ -1617,11 +1617,11 @@ components:
     ApiToken:
       description: An API token for the Reshapr control plane
       required:
-      - id
-      - organizationId
-      - name
-      - username
-      - validUntil
+        - id
+        - organizationId
+        - name
+        - username
+        - validUntil
       type: object
       properties:
         id:
@@ -1646,8 +1646,8 @@ components:
     ApiTokenRequest:
       description: ""
       required:
-      - name
-      - validityDays
+        - name
+        - validityDays
       type: object
       properties:
         name:
@@ -1656,10 +1656,10 @@ components:
         validityDays:
           description: THe number of days this token will be valid from today
           enum:
-          - "1"
-          - "7"
-          - "30"
-          - "90"
+            - "1"
+            - "7"
+            - "30"
+            - "90"
           type: string
     UserProfile:
       type: object

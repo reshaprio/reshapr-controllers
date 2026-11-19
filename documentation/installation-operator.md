@@ -22,6 +22,7 @@ kubectl apply -f deploy/crd/secretsources.reshapr.io-v1.yml
 kubectl apply -f deploy/crd/resources.reshapr.io-v1.yml
 kubectl apply -f deploy/crd/prompts.reshapr.io-v1.yml
 kubectl apply -f deploy/crd/skills.reshapr.io-v1.yml
+kubectl apply -f deploy/crd/toolsoutputfilters.reshapr.io-v1.yml
 ```
 
 You can verify the installation with:
