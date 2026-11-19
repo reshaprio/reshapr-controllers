@@ -103,6 +103,7 @@ class ConfigurationPlanReconcilerTest {
       ConfigurationPlanSpec spec = new ConfigurationPlanSpec();
       spec.setService(ref);
       spec.setBackendEndpoint("https://pastries.prod.acme.com");
+      spec.setBackendTimeout(10000);
       spec.setApiKey(true);
       spec.setOauth2(oauth2);
       spec.setAudit(true);
@@ -185,6 +186,7 @@ class ConfigurationPlanReconcilerTest {
          assertEquals("pastries-prod-plan", sentPlan.getName());
          assertEquals(REMOTE_SERVICE_ID, sentPlan.getServiceId());
          assertEquals("https://pastries.prod.acme.com", sentPlan.getBackendEndpoint());
+         assertEquals(10000, sentPlan.getBackendTimeout());
          assertEquals(REMOTE_SECRET_ID, sentPlan.getBackendSecretId());
          assertEquals(Boolean.TRUE, sentPlan.getAudit());
          assertEquals(List.of("listPastries", "getPastry"), sentPlan.getIncludedOperations());
@@ -270,6 +272,7 @@ class ConfigurationPlanReconcilerTest {
 
          io.reshapr.client.model.ConfigurationPlan sentPlan = planCaptor.getValue();
          assertEquals("https://pastries.prod.acme.com", sentPlan.getBackendEndpoint());
+         assertNull(sentPlan.getBackendTimeout());
          assertNull(sentPlan.getBackendSecretId());
          assertNull(sentPlan.getCachePolicy());
          assertNull(sentPlan.getHeaderPolicy());
@@ -308,10 +311,13 @@ class ConfigurationPlanReconcilerTest {
                      .thenReturn(updated);
             })) {
 
+         ArgumentCaptor<io.reshapr.client.model.ConfigurationPlan> updatedPlanCaptor =
+               ArgumentCaptor.forClass(io.reshapr.client.model.ConfigurationPlan.class);
          reconciler.doReconcile(cp, null, apiClient);
 
          DefaultApi mockedApi = mocked.constructed().get(0);
-         verify(mockedApi).updateConfigPlan(Mockito.eq(REMOTE_PLAN_ID), any(io.reshapr.client.model.ConfigurationPlan.class));
+         verify(mockedApi).updateConfigPlan(Mockito.eq(REMOTE_PLAN_ID), updatedPlanCaptor.capture());
+         assertEquals(10000, updatedPlanCaptor.getValue().getBackendTimeout());
          verify(mockedApi, never()).createConfigPlan(any());
          verify(mockedApi, never()).deleteConfigPlan(any());
       }
