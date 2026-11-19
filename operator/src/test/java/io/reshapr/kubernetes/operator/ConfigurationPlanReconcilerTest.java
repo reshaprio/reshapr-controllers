@@ -381,6 +381,142 @@ class ConfigurationPlanReconcilerTest {
 
       assertTrue(control.isNoUpdate());
    }
+
+   @Test
+   void doReconcile_withBackendSecretRef_resolvesSecretIdWithoutCreatingInlineSecret() throws Exception {
+      ReshaprApiClientFactory factory = mock(ReshaprApiClientFactory.class);
+      ConfigurationPlanReconciler reconciler = new ConfigurationPlanReconciler(factory);
+      ApiClient apiClient = mock(ApiClient.class);
+
+      ConfigurationPlan cp = buildFullSpecConfigurationPlan();
+      cp.getSpec().setOauth2(null);
+      cp.getSpec().setBackendSecretRef("github-api-token");
+
+      Secret matchedSecret = new Secret();
+      matchedSecret.setId("sec-from-source");
+      matchedSecret.setName("github-api-token");
+
+      ArgumentCaptor<io.reshapr.client.model.ConfigurationPlan> planCaptor =
+            ArgumentCaptor.forClass(io.reshapr.client.model.ConfigurationPlan.class);
+
+      try (MockedConstruction<DefaultApi> mocked = Mockito.mockConstruction(DefaultApi.class,
+            (mock, ctx) -> {
+               when(mock.getServices(any(BigDecimal.class), any(BigDecimal.class)))
+                     .thenReturn(List.of(remoteService()));
+               when(mock.getSecrets(0, 50)).thenReturn(List.of(matchedSecret));
+
+               io.reshapr.client.model.ConfigurationPlan created = new io.reshapr.client.model.ConfigurationPlan();
+               created.setId(REMOTE_PLAN_ID);
+               when(mock.createConfigPlan(any(io.reshapr.client.model.ConfigurationPlan.class)))
+                     .thenReturn(created);
+            })) {
+
+         UpdateControl<ConfigurationPlan> result = reconciler.doReconcile(cp, null, apiClient);
+
+         DefaultApi mockedApi = mocked.constructed().get(0);
+         verify(mockedApi, never()).createSecret(any());
+         verify(mockedApi).createConfigPlan(planCaptor.capture());
+
+         assertEquals("sec-from-source", planCaptor.getValue().getBackendSecretId());
+         assertEquals(io.reshapr.kubernetes.api.model.Status.READY, cp.getStatus().getStatus());
+         assertEquals(REMOTE_PLAN_ID, cp.getStatus().getConfigurationPlanId());
+         assertTrue(result.isPatchStatus());
+      }
+   }
+
+   @Test
+   void doReconcile_withBackendSecretRefNotFound_recordsInProgressAndReschedules() throws Exception {
+      ReshaprApiClientFactory factory = mock(ReshaprApiClientFactory.class);
+      ConfigurationPlanReconciler reconciler = new ConfigurationPlanReconciler(factory);
+      ApiClient apiClient = mock(ApiClient.class);
+
+      ConfigurationPlan cp = buildFullSpecConfigurationPlan();
+      cp.getSpec().setOauth2(null);
+      cp.getSpec().setBackendSecretRef("missing-secret");
+
+      try (MockedConstruction<DefaultApi> mocked = Mockito.mockConstruction(DefaultApi.class,
+            (mock, ctx) -> {
+               when(mock.getServices(any(BigDecimal.class), any(BigDecimal.class)))
+                     .thenReturn(List.of(remoteService()));
+               when(mock.getSecrets(0, 50)).thenReturn(List.of());
+            })) {
+
+         UpdateControl<ConfigurationPlan> result = reconciler.doReconcile(cp, null, apiClient);
+
+         DefaultApi mockedApi = mocked.constructed().get(0);
+         verify(mockedApi, never()).createConfigPlan(any());
+         assertEquals(io.reshapr.kubernetes.api.model.Status.IN_PROGRESS, cp.getStatus().getStatus());
+         assertTrue(cp.getStatus().getMessage().contains("missing-secret"));
+         assertTrue(result.isPatchStatus());
+         assertTrue(result.getScheduleDelay().isPresent());
+      }
+   }
+
+   @Test
+   void doReconcile_withBothBackendSecretRefAndOauth2_recordsError() {
+      ReshaprApiClientFactory factory = mock(ReshaprApiClientFactory.class);
+      ConfigurationPlanReconciler reconciler = new ConfigurationPlanReconciler(factory);
+      ApiClient apiClient = mock(ApiClient.class);
+
+      ConfigurationPlan cp = buildFullSpecConfigurationPlan();
+      cp.getSpec().setBackendSecretRef("github-api-token");
+
+      try (MockedConstruction<DefaultApi> mocked = Mockito.mockConstruction(DefaultApi.class)) {
+         UpdateControl<ConfigurationPlan> result = reconciler.doReconcile(cp, null, apiClient);
+
+         assertEquals(0, mocked.constructed().size());
+         assertEquals(io.reshapr.kubernetes.api.model.Status.ERROR, cp.getStatus().getStatus());
+         assertTrue(cp.getStatus().getMessage().contains("mutually exclusive"));
+         assertTrue(result.isPatchStatus());
+      }
+   }
+
+   @Test
+   void doReconcile_withBackendSecretRefOnSecondPage_paginatesAndResolvesSecret() throws Exception {
+      ReshaprApiClientFactory factory = mock(ReshaprApiClientFactory.class);
+      ConfigurationPlanReconciler reconciler = new ConfigurationPlanReconciler(factory);
+      ApiClient apiClient = mock(ApiClient.class);
+
+      ConfigurationPlan cp = buildFullSpecConfigurationPlan();
+      cp.getSpec().setOauth2(null);
+      cp.getSpec().setBackendSecretRef("page-two-secret");
+
+      List<Secret> firstPage = new java.util.ArrayList<>();
+      for (int i = 0; i < 50; i++) {
+         Secret other = new Secret();
+         other.setId("sec-" + i);
+         other.setName("other-" + i);
+         firstPage.add(other);
+      }
+      Secret secondPageMatch = new Secret();
+      secondPageMatch.setId("sec-page-2");
+      secondPageMatch.setName("page-two-secret");
+
+      ArgumentCaptor<io.reshapr.client.model.ConfigurationPlan> planCaptor =
+            ArgumentCaptor.forClass(io.reshapr.client.model.ConfigurationPlan.class);
+
+      try (MockedConstruction<DefaultApi> mocked = Mockito.mockConstruction(DefaultApi.class,
+            (mock, ctx) -> {
+               when(mock.getServices(any(BigDecimal.class), any(BigDecimal.class)))
+                     .thenReturn(List.of(remoteService()));
+               when(mock.getSecrets(0, 50)).thenReturn(firstPage);
+               when(mock.getSecrets(1, 50)).thenReturn(List.of(secondPageMatch));
+
+               io.reshapr.client.model.ConfigurationPlan created = new io.reshapr.client.model.ConfigurationPlan();
+               created.setId(REMOTE_PLAN_ID);
+               when(mock.createConfigPlan(any(io.reshapr.client.model.ConfigurationPlan.class)))
+                     .thenReturn(created);
+            })) {
+
+         reconciler.doReconcile(cp, null, apiClient);
+
+         DefaultApi mockedApi = mocked.constructed().get(0);
+         verify(mockedApi).getSecrets(0, 50);
+         verify(mockedApi).getSecrets(1, 50);
+         verify(mockedApi).createConfigPlan(planCaptor.capture());
+         assertEquals("sec-page-2", planCaptor.getValue().getBackendSecretId());
+      }
+   }
 }
 
 

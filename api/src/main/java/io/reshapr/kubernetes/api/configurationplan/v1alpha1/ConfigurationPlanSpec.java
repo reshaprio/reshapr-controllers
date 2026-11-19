@@ -26,7 +26,7 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "service", "backendEndpoint", "apiKey", "oauth2", "artifacts", "audit", "includedOperations", "excludedOperations", "cachePolicy", "headerPolicy", "toolExposureMode" })
+@JsonPropertyOrder({ "service", "backendEndpoint", "backendSecretRef", "apiKey", "oauth2", "artifacts", "audit", "includedOperations", "excludedOperations", "cachePolicy", "headerPolicy", "toolExposureMode" })
 @Buildable(editableEnabled = false, builderPackage = "io.fabric8.kubernetes.api.builder")
 public class ConfigurationPlanSpec {
 
@@ -35,6 +35,9 @@ public class ConfigurationPlanSpec {
 
    @JsonPropertyDescription("Backend endpoint for this Configuration Plan")
    private String backendEndpoint;
+
+   @JsonPropertyDescription("Name of an existing Secret in the reShapr control plane to authenticate backend calls. Mutually exclusive with oauth2.")
+   private String backendSecretRef;
 
    @JsonPropertyDescription("Whether an API Key should be generated")
    private boolean apiKey = false;
@@ -77,6 +80,14 @@ public class ConfigurationPlanSpec {
 
    public void setBackendEndpoint(String backendEndpoint) {
       this.backendEndpoint = backendEndpoint;
+   }
+
+   public String getBackendSecretRef() {
+      return backendSecretRef;
+   }
+
+   public void setBackendSecretRef(String backendSecretRef) {
+      this.backendSecretRef = backendSecretRef;
    }
 
    public boolean isApiKey() {
