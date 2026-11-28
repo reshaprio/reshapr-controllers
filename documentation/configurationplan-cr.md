@@ -78,7 +78,7 @@ status:
 | Property           | Description                                                                                                                                                                                                                                                                  |
 |--------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `service`          | **Mandatory**. Reference to the target [Service](./service-cr.md) this plan configures. See _Service reference_ below.                                                                                                                                                       |
-| `backendEndpoint`  | **Mandatory**. URL of the backend implementation the reShapr gateway should route traffic to.                                                                                                                                                                                |
+| `backendEndpoint`  | **Mandatory**. Target backend endpoint the reShapr gateway routes traffic to — an HTTP/HTTPS URL for REST/GraphQL/gRPC services, or a broker URI such as `kafka://broker:9092` for `ASYNC` (AsyncAPI) services (reShapr 1.3+). See [_Event broker endpoints_](#event-broker-endpoints-async-services) below. |
 | `backendSecretRef` | **Optional**. Name of an existing `Secret` in the reShapr control plane (e.g. synced by [`SecretSource`](./secretsource-cr.md)) used to authenticate backend calls. Mutually exclusive with `oauth2`.                                                                       |
 | `backendTimeout`   | **Optional**. Timeout in milliseconds for requests to the backend endpoint (must be ≥ 1). When absent, the gateway falls back to its built-in default (`3000` ms).                                                                                                           |
 | `apiKey`           | **Optional**. When `true`, the control plane generates an API Key for this plan. Defaults to `false`.                                                                                                                                                                        |
@@ -143,6 +143,46 @@ requests).
 |------------|--------------------------------------------------------------------|
 | `from`     | **Mandatory**. Name of the incoming header to rename.               |
 | `to`       | **Mandatory**. Target header name the value is propagated under.    |
+
+### Event broker endpoints (`ASYNC` services)
+
+For `ASYNC` (AsyncAPI 3.0) services supported in reShapr `1.3` and later, `spec.backendEndpoint`
+points to an event broker URI instead of an HTTP URL. For Kafka brokers, use the `kafka://` scheme:
+
+```text
+kafka://<host>:<port>[,<host2>:<port2>][/<topic>][?<query-options>]
+```
+
+* `<host>:<port>[,<host2>:<port2>]` — comma-separated Kafka bootstrap server addresses.
+* `/<topic>` — **Optional**. Destination topic overriding the channel address declared in the AsyncAPI specification.
+* Query options:
+  * `filter` — **Optional**. Content filter applied to consumed event payloads (e.g. `filter=json:$.org==foobar`).
+  * `securityProtocol` — **Optional**. Kafka `security.protocol`. Defaults to `SASL_SSL` when a `backendSecretRef` with username/password is configured, or `PLAINTEXT` otherwise.
+  * `saslMechanism` — **Optional**. Kafka `sasl.mechanism` used with `backendSecretRef` credentials (defaults to `PLAIN`; `SCRAM-*` values such as `SCRAM-SHA-256` or `SCRAM-SHA-512` automatically configure `ScramLoginModule`).
+
+To authenticate against a secured Kafka cluster, attach a reShapr `Secret` containing `username`
+and `password` (for example managed via [`SecretSource`](./secretsource-cr.md)) through
+`spec.backendSecretRef`:
+
+```yaml
+apiVersion: reshapr.io/v1alpha1
+kind: ConfigurationPlan
+metadata:
+  name: orders-asyncapi-plan
+  annotations:
+    reshapr.io/instance: reshapr-control-plane-ctrl.reshapr-system
+    reshapr.io/organization: reshapr
+spec:
+  service:
+    name: orders-events-api
+    version: 1.0.0
+  backendEndpoint: kafka://broker:9092?filter=json:$.org==foobar&securityProtocol=SASL_SSL&saslMechanism=SCRAM-SHA-512
+  backendSecretRef: kafka-credentials
+```
+
+See [`deploy/samples/orders-asyncapi-service.yaml`](../deploy/samples/orders-asyncapi-service.yaml)
+and [`deploy/samples/orders-asyncapi-configurationplan.yaml`](../deploy/samples/orders-asyncapi-configurationplan.yaml)
+for a runnable pair of AsyncAPI manifests.
 
 ## Complete example
 

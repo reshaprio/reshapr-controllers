@@ -50,7 +50,7 @@ public class CustomToolItem {
     @JsonPropertyDescription("A JSON Schema object defining the expected parameters for the tool.")
     private CustomToolInput input;
 
-    @JsonPropertyDescription("The target tool arguments result. Actually a template reusing ${input} notation.")
+    @JsonPropertyDescription("Target tool argument template (required when 'tool' is set). Exact '${propertyName}' or '${parent.child}' values substitute properties from 'input.properties'; other values are passed as-is.")
     private Map<String, Object> arguments;
 
     public String getTool() {

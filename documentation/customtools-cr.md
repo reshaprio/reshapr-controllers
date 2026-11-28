@@ -95,7 +95,7 @@ Each entry under `spec.customTools` follows this schema. A custom tool is either
 | Property       | Description                                                                                                                                                                       |
 |----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `tool`         | **Optional / declarative**. The name of the target tool this custom tool aliases (e.g. `createIssue`).                                                                             |
-| `arguments`    | **Optional / declarative**. Argument template for the target tool. Values can reference the custom input via the `${input.<name>}` notation.                                       |
+| `arguments`    | **Required with `tool` (declarative)**. Argument template for the target tool. Exact `${propertyName}` (or `${parent.child}`) values substitute matching properties from `input.properties`; other values are passed as-is (embedded substitution is not supported). |
 | `script`       | **Optional / scripted**. Custom logic that orchestrates several tools.                                                                                                             |
 | `tools`        | **Required with `script`**. Allow-list of tools the script can call. Each entry is a [_tool reference_](#tool-reference). Also used to pre-check elicitation secrets.              |
 | `description`  | **Optional**. Human-readable long description of this custom tool.                                                                                                                |

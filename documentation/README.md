@@ -27,9 +27,9 @@ extend a running reShapr **control plane** with a Kubernetes-native experience:
 
 | Kind                 | Scope       | Description                                                                 |
 |----------------------|-------------|-----------------------------------------------------------------------------|
-| [`Service`](./service-cr.md)                       | Namespaced | Import an API artifact (OpenAPI, gRPC, etc.) as a reShapr Service.          |
+| [`Service`](./service-cr.md)                       | Namespaced | Import an API artifact (OpenAPI, GraphQL, gRPC, AsyncAPI) as a reShapr Service. |
 | [`GatewayGroup`](./gatewaygroup-cr.md)             | Namespaced | Declare a group of gateway instances identified by labels.                  |
-| [`ConfigurationPlan`](./configurationplan-cr.md)   | Namespaced | Bind a Service to a backend endpoint with credentials (API Key, OAuth2).    |
+| [`ConfigurationPlan`](./configurationplan-cr.md)   | Namespaced | Bind a Service to a backend endpoint (HTTP or event broker such as `kafka://`) with credentials. |
 | [`Exposition`](./exposition-cr.md)                 | Namespaced | Expose a Service on a GatewayGroup through a specific ConfigurationPlan.    |
 | [`SecretSource`](./secretsource-cr.md)             | Namespaced | Declare Secrets in the control plane, optionally sourced from Kubernetes Secrets. |
 | [`CustomTools`](./customtools-cr.md)               | Namespaced | Attach declarative or scripted custom tools to an existing Service.         |
