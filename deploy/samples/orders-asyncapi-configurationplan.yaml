@@ -7,7 +7,7 @@ metadata:
     reshapr.io/organization: reshapr
 spec:
   service:
-    name: Orders Events API
+    name: orders-events-api
     version: 1.0.0
   # Optional query parameters: ?filter=json:$.org==foobar&securityProtocol=SASL_SSL&saslMechanism=PLAIN
   # Pair with backendSecretRef when authenticating with SASL credentials.

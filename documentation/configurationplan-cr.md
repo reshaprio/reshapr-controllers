@@ -174,7 +174,7 @@ metadata:
     reshapr.io/organization: reshapr
 spec:
   service:
-    name: Orders Events API
+    name: orders-events-api
     version: 1.0.0
   backendEndpoint: kafka://broker:9092?filter=json:$.org==foobar&securityProtocol=SASL_SSL&saslMechanism=SCRAM-SHA-512
   backendSecretRef: kafka-credentials
