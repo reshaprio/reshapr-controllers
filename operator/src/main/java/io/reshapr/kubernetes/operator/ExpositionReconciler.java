@@ -136,6 +136,42 @@ public class ExpositionReconciler extends BaseReshaprReconciler<Exposition> impl
                   .rescheduleAfter(RETRY_DELAY_MS);
          }
 
+         // If this CR already tracks a control plane Exposition, inspect it before mutating.
+         if (alreadyCreated) {
+            io.reshapr.client.model.Exposition existing = findRemoteExpositionById(api, currentExpositionId);
+            if (existing != null) {
+               if (matchesDesiredTarget(existing, name, remotePlan.getId(), remoteGroup.getId())) {
+                  // Only non-control-plane fields changed (e.g. keepOnDelete) — no replacement needed.
+                  logger.infof("Exposition '%s' (id=%s) already matches desired target — updating observed generation",
+                        name, currentExpositionId);
+                  status.setStatus(Status.READY);
+                  status.setMessage(null);
+                  if (generation != null) {
+                     status.setObservedGeneration(generation);
+                  }
+                  exposition.setStatus(status);
+                  return UpdateControl.patchStatus(exposition);
+               }
+               if (spec.isKeepOnDelete()) {
+                  logger.warnf("'keepOnDelete' is set — keeping previous control plane Exposition id=%s for '%s'; "
+                        + "cannot replace Exposition because names are unique per organization",
+                        currentExpositionId, name);
+                  return recordStatus(exposition, Status.ERROR,
+                        "Cannot replace Exposition '" + name + "' while keepOnDelete is true (existing id=" + currentExpositionId + ")")
+                        .rescheduleAfter(RETRY_DELAY_MS);
+               }
+               // Delete the previous Exposition before recreating: names are unique per organization
+               // and the control plane does not offer an update endpoint on /v1/expositions/{id}.
+               deletePreviousExposition(api, currentExpositionId, name);
+            } else {
+               logger.warnf("Recorded control plane Exposition id=%s for '%s' no longer exists (HTTP 404) — recreating",
+                     currentExpositionId, name);
+            }
+            // Clear the old id before creating the replacement so a failed creation won't leave a stale id in status.
+            status.setExpositionId(null);
+            exposition.setStatus(status);
+         }
+
          // Build the ExpositionReference payload, using the custom resource metadata.name
          // as the organization-unique Exposition name in the control plane.
          String organization = exposition.getMetadata().getAnnotations().get(ReshaprAnnotations.ORGANIZATION);
@@ -145,20 +181,14 @@ public class ExpositionReconciler extends BaseReshaprReconciler<Exposition> impl
          reference.setConfigurationPlanId(remotePlan.getId());
          reference.setGatewayGroupId(remoteGroup.getId());
 
-         io.reshapr.client.model.Exposition created = api.createExposition(reference);
-         String newExpositionId = created != null ? created.getId() : null;
+         String newExpositionId = createOrAdoptExposition(api, reference, remoteService.getId(),
+               remotePlan.getId(), remoteGroup.getId(), name);
 
          if (newExpositionId == null) {
             logger.warnf("Exposition '%s': control plane creation did not return an id — rescheduling", name);
             return recordStatus(exposition, Status.IN_PROGRESS,
                   "Control plane did not return an Exposition id").rescheduleAfter(RETRY_DELAY_MS);
          }
-
-         logger.infof("Exposition '%s' created in control plane with id=%s (service=%s, configurationPlan=%s, gatewayGroup=%s)",
-               name, newExpositionId, remoteService.getId(), remotePlan.getId(), remoteGroup.getId());
-
-         // A spec change yields a new control plane Exposition — remove the previous one.
-         deletePreviousExpositionIfReplaced(api, spec, alreadyCreated, currentExpositionId, newExpositionId, name);
 
          status.setStatus(Status.READY);
          status.setMessage(null);
@@ -207,7 +237,7 @@ public class ExpositionReconciler extends BaseReshaprReconciler<Exposition> impl
          DefaultApi api = new DefaultApi(apiClient);
 
          String expositionId = exposition.getStatus() != null ? exposition.getStatus().getExpositionId() : null;
-         if (expositionId != null) {
+         if (expositionId != null && !expositionId.isBlank()) {
             api.deleteExposition(expositionId);
             logger.infof("Deleted control plane Exposition id=%s for resource '%s'", expositionId, name);
          } else {
@@ -277,31 +307,90 @@ public class ExpositionReconciler extends BaseReshaprReconciler<Exposition> impl
    }
 
    /**
-    * When a spec change requires creating a new control plane Exposition, delete the previous
-    * one to avoid orphans — unless {@code keepOnDelete} asks to preserve it. No-op on the first
-    * creation or when the id is unchanged.
+    * Create the Exposition in the control plane, or adopt an existing one on HTTP 409 Conflict
+    * if it already matches the desired name, ConfigurationPlan, and GatewayGroup.
     */
-   private void deletePreviousExpositionIfReplaced(DefaultApi api, ExpositionSpec spec, boolean alreadyCreated,
-         String previousExpositionId, String newExpositionId, String name) {
-      if (!alreadyCreated || previousExpositionId == null || previousExpositionId.equals(newExpositionId)) {
-         return;
+   private String createOrAdoptExposition(DefaultApi api, ExpositionReference reference,
+         String serviceId, String planId, String gatewayGroupId, String name) throws ApiException {
+      try {
+         io.reshapr.client.model.Exposition created = api.createExposition(reference);
+         String id = created != null ? created.getId() : null;
+         if (id != null) {
+            logger.infof("Exposition '%s' created in control plane with id=%s (service=%s, configurationPlan=%s, gatewayGroup=%s)",
+                  name, id, serviceId, planId, gatewayGroupId);
+         }
+         return id;
+      } catch (ApiException e) {
+         if (e.getCode() != 409) {
+            throw e;
+         }
+         io.reshapr.client.model.Exposition existing = findMatchingExposition(api, serviceId, gatewayGroupId, name, planId);
+         if (existing != null && existing.getId() != null && !existing.getId().isBlank()) {
+            logger.infof("Adopting existing control plane Exposition '%s' with id=%s after HTTP 409",
+                  name, existing.getId());
+            return existing.getId();
+         }
+         throw e;
       }
-      if (spec.isKeepOnDelete()) {
-         logger.infof("'keepOnDelete' is set — keeping previous control plane Exposition id=%s for '%s'",
-               previousExpositionId, name);
-         return;
+   }
+
+   /** Fetch a control plane Exposition by id, returning {@code null} when HTTP 404 is returned. */
+   private io.reshapr.client.model.Exposition findRemoteExpositionById(DefaultApi api, String expositionId)
+         throws ApiException {
+      try {
+         return api.getExposition(expositionId);
+      } catch (ApiException e) {
+         if (e.getCode() == 404) {
+            return null;
+         }
+         throw e;
       }
+   }
+
+   /** Find a control plane Exposition matching the desired name, ConfigurationPlan, and GatewayGroup. */
+   private io.reshapr.client.model.Exposition findMatchingExposition(DefaultApi api, String serviceId,
+         String gatewayGroupId, String name, String planId) throws ApiException {
+      List<io.reshapr.client.model.Exposition> expositions = api.getExpositions(serviceId, gatewayGroupId);
+      if (expositions == null) {
+         return null;
+      }
+      for (io.reshapr.client.model.Exposition candidate : expositions) {
+         if (matchesDesiredTarget(candidate, name, planId, gatewayGroupId)) {
+            return candidate;
+         }
+      }
+      return null;
+   }
+
+   /** Check whether a remote Exposition matches the desired name, ConfigurationPlan id, and GatewayGroup id. */
+   private boolean matchesDesiredTarget(io.reshapr.client.model.Exposition candidate,
+         String expectedName, String expectedPlanId, String expectedGatewayGroupId) {
+      if (candidate == null) {
+         return false;
+      }
+      String candidatePlanId = candidate.getConfigurationPlan() != null ? candidate.getConfigurationPlan().getId() : null;
+      String candidateGroupId = candidate.getGatewayGroup() != null ? candidate.getGatewayGroup().getId() : null;
+      return expectedName.equals(candidate.getName())
+            && expectedPlanId.equals(candidatePlanId)
+            && expectedGatewayGroupId.equals(candidateGroupId);
+   }
+
+   /**
+    * Delete the previous control plane Exposition prior to recreating it. A 404 is treated as
+    * already deleted; any other API error is propagated so reconciliation fails cleanly without
+    * attempting creation.
+    */
+   private void deletePreviousExposition(DefaultApi api, String previousExpositionId, String name) throws ApiException {
       try {
          api.deleteExposition(previousExpositionId);
-         logger.infof("Deleted previous control plane Exposition id=%s for resource '%s' after re-creation",
+         logger.infof("Deleted previous control plane Exposition id=%s for resource '%s' before re-creation",
                previousExpositionId, name);
       } catch (ApiException e) {
          if (e.getCode() == 404) {
             logger.infof("Previous control plane Exposition id=%s for '%s' already deleted (HTTP 404)",
                   previousExpositionId, name);
          } else {
-            logger.warnf(e, "Failed to delete previous control plane Exposition id=%s for '%s' — possible orphan",
-                  previousExpositionId, name);
+            throw e;
          }
       }
    }
