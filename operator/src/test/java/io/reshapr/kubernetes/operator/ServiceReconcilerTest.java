@@ -56,6 +56,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link ServiceReconciler} and generated OpenAPI client AsyncAPI model support.
+ * @author vaishnav
  */
 class ServiceReconcilerTest {
 

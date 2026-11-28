@@ -94,12 +94,12 @@ Each entry under `spec.customTools` follows this schema. A custom tool is either
 
 | Property       | Description                                                                                                                                                                       |
 |----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `tool`         | **Required for declarative form**. The name of the target tool this custom tool aliases (e.g. `createIssue`). Mutually exclusive with `script`.                                    |
-| `arguments`    | **Required with `tool` (declarative)**. Argument template for the target tool. A value that is exactly `${propertyName}` (or a dot-path like `${parent.child}`) is substituted with the matching property from `input.properties`; unknown placeholders are rejected at import time. Non-placeholder values are passed through as-is (embedded substitution such as `Bearer ${token}` is not supported). |
-| `script`       | **Required for scripted form**. Custom logic that orchestrates several tools. Mutually exclusive with `tool`.                                                                      |
+| `tool`         | **Optional / declarative**. The name of the target tool this custom tool aliases (e.g. `createIssue`).                                                                             |
+| `arguments`    | **Required with `tool` (declarative)**. Argument template for the target tool. Exact `${propertyName}` (or `${parent.child}`) values substitute matching properties from `input.properties`; other values are passed as-is (embedded substitution is not supported). |
+| `script`       | **Optional / scripted**. Custom logic that orchestrates several tools.                                                                                                             |
 | `tools`        | **Required with `script`**. Allow-list of tools the script can call. Each entry is a [_tool reference_](#tool-reference). Also used to pre-check elicitation secrets.              |
-| `description`  | **Mandatory**. Human-readable long description of this custom tool.                                                                                                               |
-| `input`        | **Mandatory**. A JSON Schema object describing the parameters the tool expects — see _Input schema_ below.                                                                        |
+| `description`  | **Optional**. Human-readable long description of this custom tool.                                                                                                                |
+| `input`        | **Optional**. A JSON Schema object describing the parameters the tool expects — see _Input schema_ below.                                                                          |
 
 #### Tool reference
 
@@ -135,9 +135,6 @@ spec:
   customTools:
     getMillefeuille:
       description: Fetch the details of the Millefeuille pastry
-      input:
-        type: object
-        properties: {}
       tool: getPastryByName
       arguments:
         name: Millefeuille

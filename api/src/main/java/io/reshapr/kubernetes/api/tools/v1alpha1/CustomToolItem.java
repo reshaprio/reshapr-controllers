@@ -26,12 +26,7 @@ import java.util.Map;
 
 /**
  * One custom tool definition. It is either a declarative mapping to a target tool
- * ({@code tool} + {@code arguments}, both required) or a custom script logic
- * ({@code script} + {@code tools}, both required).
- * <p>
- * In declarative mappings, values in {@code arguments} that are exactly {@code ${propertyName}}
- * (or a dot-path such as {@code ${parent.child}}) are substituted with the matching input property
- * declared under {@code input.properties}. Non-placeholder values are passed through as-is.
+ * ({@code tool} + {@code arguments}) or a custom script logic ({@code script} + {@code tools}).
  * @author laurent
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -55,7 +50,7 @@ public class CustomToolItem {
     @JsonPropertyDescription("A JSON Schema object defining the expected parameters for the tool.")
     private CustomToolInput input;
 
-    @JsonPropertyDescription("A template for the target tool arguments. Required when 'tool' is set. A value that is exactly '${propertyName}' (or dot-path '${parent.child}') is substituted from 'input.properties'; unknown placeholders are rejected at import time. Non-placeholder values are passed through as-is (embedded substitution is not supported).")
+    @JsonPropertyDescription("Target tool argument template (required when 'tool' is set). Exact '${propertyName}' or '${parent.child}' values substitute properties from 'input.properties'; other values are passed as-is.")
     private Map<String, Object> arguments;
 
     public String getTool() {

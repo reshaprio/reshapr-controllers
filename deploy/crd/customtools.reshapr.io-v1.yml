@@ -25,12 +25,10 @@ spec:
                     arguments:
                       additionalProperties:
                         type: "object"
-                      description: "A template for the target tool arguments. Required\
-                        \ when 'tool' is set. A value that is exactly '${propertyName}'\
-                        \ (or dot-path '${parent.child}') is substituted from 'input.properties';\
-                        \ unknown placeholders are rejected at import time. Non-placeholder\
-                        \ values are passed through as-is (embedded substitution is\
-                        \ not supported)."
+                      description: "Target tool argument template (required when 'tool'\
+                        \ is set). Exact '${propertyName}' or '${parent.child}' values\
+                        \ substitute properties from 'input.properties'; other values\
+                        \ are passed as-is."
                       type: "object"
                     description:
                       description: "Human readable long description of this custom\
