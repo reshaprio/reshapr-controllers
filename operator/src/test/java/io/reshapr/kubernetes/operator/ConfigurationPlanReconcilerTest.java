@@ -523,6 +523,76 @@ class ConfigurationPlanReconcilerTest {
          assertEquals("sec-page-2", planCaptor.getValue().getBackendSecretId());
       }
    }
+
+   @Test
+   void doReconcile_withKafkaBackendEndpointForAsyncService_forwardsEndpointAndSecretRef() throws Exception {
+      ReshaprApiClientFactory factory = mock(ReshaprApiClientFactory.class);
+      ConfigurationPlanReconciler reconciler = new ConfigurationPlanReconciler(factory);
+      ApiClient apiClient = mock(ApiClient.class);
+
+      String kafkaEndpoint = "kafka://broker:9092?filter=json:$.org==foobar&securityProtocol=SASL_SSL&saslMechanism=SCRAM-SHA-512";
+
+      ServiceRef ref = new ServiceRef();
+      ref.setName("Orders Events API");
+      ref.setVersion("1.0.0");
+
+      ConfigurationPlanSpec spec = new ConfigurationPlanSpec();
+      spec.setService(ref);
+      spec.setBackendEndpoint(kafkaEndpoint);
+      spec.setBackendSecretRef("kafka-credentials");
+
+      Map<String, String> annotations = new HashMap<>();
+      annotations.put(ReshaprAnnotations.INSTANCE, "reshapr-control-plane-ctrl.reshapr-system");
+      annotations.put(ReshaprAnnotations.ORGANIZATION, ORG);
+
+      ObjectMeta meta = new ObjectMeta();
+      meta.setName("orders-events-plan");
+      meta.setNamespace("default");
+      meta.setGeneration(1L);
+      meta.setAnnotations(annotations);
+
+      ConfigurationPlan cp = new ConfigurationPlan();
+      cp.setMetadata(meta);
+      cp.setSpec(spec);
+
+      io.reshapr.client.model.Service asyncService = new io.reshapr.client.model.Service();
+      asyncService.setId("svc-async-1");
+      asyncService.setName("Orders Events API");
+      asyncService.setVersion("1.0.0");
+      asyncService.setType(io.reshapr.client.model.ServiceType.ASYNC);
+
+      Secret kafkaSecret = new Secret();
+      kafkaSecret.setId("sec-kafka-1");
+      kafkaSecret.setName("kafka-credentials");
+
+      ArgumentCaptor<io.reshapr.client.model.ConfigurationPlan> planCaptor =
+            ArgumentCaptor.forClass(io.reshapr.client.model.ConfigurationPlan.class);
+
+      try (MockedConstruction<DefaultApi> mocked = Mockito.mockConstruction(DefaultApi.class,
+            (mock, ctx) -> {
+               when(mock.getServices(any(BigDecimal.class), any(BigDecimal.class)))
+                     .thenReturn(List.of(asyncService));
+               when(mock.getSecrets(0, 50)).thenReturn(List.of(kafkaSecret));
+
+               io.reshapr.client.model.ConfigurationPlan created = new io.reshapr.client.model.ConfigurationPlan();
+               created.setId(REMOTE_PLAN_ID);
+               when(mock.createConfigPlan(any(io.reshapr.client.model.ConfigurationPlan.class)))
+                     .thenReturn(created);
+            })) {
+
+         UpdateControl<ConfigurationPlan> result = reconciler.doReconcile(cp, null, apiClient);
+
+         DefaultApi mockedApi = mocked.constructed().get(0);
+         verify(mockedApi).createConfigPlan(planCaptor.capture());
+
+         io.reshapr.client.model.ConfigurationPlan sentPlan = planCaptor.getValue();
+         assertEquals("svc-async-1", sentPlan.getServiceId());
+         assertEquals(kafkaEndpoint, sentPlan.getBackendEndpoint());
+         assertEquals("sec-kafka-1", sentPlan.getBackendSecretId());
+         assertEquals(io.reshapr.kubernetes.api.model.Status.READY, cp.getStatus().getStatus());
+         assertTrue(result.isPatchStatus());
+      }
+   }
 }
 
 

@@ -84,6 +84,20 @@ status:
 | `secretRef`          | **Optional**. Name of a Reshapr `Secret` in the same organization whose credentials are used by the control plane to fetch the URL. |
 | `keepOnDelete`       | **Optional**. When `true`, deleting the CR keeps the Service in the control plane. Defaults to `false`.                             |
 
+## AsyncAPI services
+
+Starting with reShapr `1.3`, `Service` supports importing **AsyncAPI 3.0** specifications. Point
+`spec.url` at an AsyncAPI 3 document and the control plane discovers an `ASYNC` Service:
+
+* `send` operations (events emitted by the application) are exposed as subscribable MCP events.
+* `receive` operations (commands consumed by the application) are exposed as MCP tools that publish
+  to the broker.
+
+To bind an `ASYNC` Service to a Kafka broker, pair it with a [`ConfigurationPlan`](./configurationplan-cr.md#event-broker-endpoints-async-services)
+using a `kafka://` `backendEndpoint`. See [`deploy/samples/orders-asyncapi-service.yaml`](../deploy/samples/orders-asyncapi-service.yaml)
+and [`deploy/samples/orders-asyncapi-configurationplan.yaml`](../deploy/samples/orders-asyncapi-configurationplan.yaml)
+for a complete example.
+
 ## Complete example
 
 ```yaml

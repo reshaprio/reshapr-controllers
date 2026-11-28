@@ -25,8 +25,12 @@ spec:
                     arguments:
                       additionalProperties:
                         type: "object"
-                      description: "The target tool arguments result. Actually a template\
-                        \ reusing ${input} notation."
+                      description: "A template for the target tool arguments. Required\
+                        \ when 'tool' is set. A value that is exactly '${propertyName}'\
+                        \ (or dot-path '${parent.child}') is substituted from 'input.properties';\
+                        \ unknown placeholders are rejected at import time. Non-placeholder\
+                        \ values are passed through as-is (embedded substitution is\
+                        \ not supported)."
                       type: "object"
                     description:
                       description: "Human readable long description of this custom\
@@ -80,8 +84,8 @@ spec:
                 description: "The custom tools are defined with name as key."
                 type: "object"
               keepOnDelete:
-                description: "Flag to keep artifact in control plane when deleting this\
-                  \ resource. Default is false"
+                description: "Flag to keep artifact in control plane when deleting\
+                  \ this resource. Default is false."
                 type: "boolean"
               service:
                 description: "Holds reference information about this Service custom\
